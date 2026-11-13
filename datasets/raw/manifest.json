@@ -1,0 +1,24 @@
+{
+  "noaa_isd": {
+    "file": "noaa_isd_saudi_hourly.csv.gz",
+    "rows": 948244,
+    "source": "https://datasource.kapsarc.org/api/explore/v2.1/catalog/datasets/saudi-hourly-weather-data/exports/csv",
+    "where": "observation_date >= date'2022-08-01'",
+    "downloaded_at_utc": "2026-11-12T19:38:59+00:00"
+  },
+  "cams": {
+    "file": "cams_dust_hourly.csv.gz",
+    "rows": 752640,
+    "stations": 28,
+    "source": "https://air-quality-api.open-meteo.com/v1/air-quality",
+    "variables": [
+      "pm10",
+      "pm2_5",
+      "dust",
+      "aerosol_optical_depth"
+    ],
+    "start": "2022-08-01",
+    "end": "2025-08-24",
+    "downloaded_at_utc": "2026-11-12T19:40:53+00:00"
+  }
+}

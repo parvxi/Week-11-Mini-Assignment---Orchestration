@@ -1,0 +1,3638 @@
+{
+  "systems": [
+    "fixed_pipeline",
+    "simple_loop",
+    "part2_loop",
+    "adaptive"
+  ],
+  "summary": {
+    "fixed_pipeline": {
+      "label": "Baseline 1 \u00b7 fixed Airflow workflow",
+      "all": {
+        "passed": 3,
+        "total": 19,
+        "mean_score": 0.239
+      },
+      "outcome": {
+        "passed": 3,
+        "total": 13,
+        "mean_score": 0.349
+      },
+      "capability": {
+        "passed": 0,
+        "total": 6,
+        "mean_score": 0.0
+      },
+      "coordination": {
+        "runs_without_fault": 9,
+        "mean_trials": 1.0,
+        "mean_agent_steps": 2.0,
+        "mean_seconds": 4.32,
+        "fault_runs_survived": "0/3"
+      }
+    },
+    "simple_loop": {
+      "label": "Baseline 2 \u00b7 class agent loop",
+      "all": {
+        "passed": 2,
+        "total": 19,
+        "mean_score": 0.184
+      },
+      "outcome": {
+        "passed": 2,
+        "total": 13,
+        "mean_score": 0.27
+      },
+      "capability": {
+        "passed": 0,
+        "total": 6,
+        "mean_score": 0.0
+      },
+      "coordination": {
+        "runs_without_fault": 9,
+        "mean_trials": 2.38,
+        "mean_agent_steps": 11.88,
+        "mean_seconds": 5.55,
+        "fault_runs_survived": "1/3"
+      }
+    },
+    "part2_loop": {
+      "label": "Part 2 loop (this repo)",
+      "all": {
+        "passed": 9,
+        "total": 19,
+        "mean_score": 0.462
+      },
+      "outcome": {
+        "passed": 8,
+        "total": 13,
+        "mean_score": 0.598
+      },
+      "capability": {
+        "passed": 1,
+        "total": 6,
+        "mean_score": 0.167
+      },
+      "coordination": {
+        "runs_without_fault": 9,
+        "mean_trials": 2.62,
+        "mean_agent_steps": 15.88,
+        "mean_seconds": 6.91,
+        "fault_runs_survived": "2/3"
+      }
+    },
+    "adaptive": {
+      "label": "Part 3 adaptive system",
+      "all": {
+        "passed": 18,
+        "total": 19,
+        "mean_score": 0.983
+      },
+      "outcome": {
+        "passed": 12,
+        "total": 13,
+        "mean_score": 0.976
+      },
+      "capability": {
+        "passed": 6,
+        "total": 6,
+        "mean_score": 1.0
+      },
+      "coordination": {
+        "runs_without_fault": 9,
+        "mean_trials": 1.89,
+        "mean_agent_steps": 14.56,
+        "mean_seconds": 12.26,
+        "fault_runs_survived": "3/3"
+      }
+    }
+  },
+  "cases": [
+    {
+      "id": "outcome_columns_excluded",
+      "kind": "outcome",
+      "measures": "intermediate",
+      "title": "Tomorrow's outcome columns are kept out of the model",
+      "input": {
+        "main": {
+          "dataset": "saudi_real",
+          "dataset_description": "Airflow output as published: 29,486 station-days, 28 stations, 3.8% events, includes tomorrow's outcome columns",
+          "fault": null,
+          "budget": 3
+        }
+      },
+      "run_config": {
+        "target_f1": 0.35,
+        "llm": "off (deterministic paths)"
+      },
+      "expected": "next_day_min_visibility_m and next_day_low_vis_hours are not features of the final model",
+      "scoring": "1 if both columns are excluded from the final model's features, else 0",
+      "threshold": 1.0,
+      "results": {
+        "fixed_pipeline": {
+          "score": 0.0,
+          "passed": false,
+          "evidence": "trained on next_day_min_visibility_m, next_day_low_vis_hours"
+        },
+        "simple_loop": {
+          "score": 0.0,
+          "passed": false,
+          "evidence": "trained on next_day_min_visibility_m, next_day_low_vis_hours"
+        },
+        "part2_loop": {
+          "score": 1.0,
+          "passed": true,
+          "evidence": "next_day_min_visibility_m, next_day_low_vis_hours excluded"
+        },
+        "adaptive": {
+          "score": 1.0,
+          "passed": true,
+          "evidence": "next_day_min_visibility_m, next_day_low_vis_hours excluded"
+        }
+      }
+    },
+    {
+      "id": "leak_disguised",
+      "kind": "outcome",
+      "measures": "intermediate",
+      "title": "A leak under an unfamiliar name is caught by measurement",
+      "input": {
+        "main": {
+          "dataset": "synthetic_disguised_leak",
+          "dataset_description": "seeded fixture, ~6% positives + risk_engine_score, a column derived from the label",
+          "fault": null,
+          "budget": 3
+        }
+      },
+      "run_config": {
+        "target_f1": 0.35,
+        "llm": "off (deterministic paths)"
+      },
+      "expected": "risk_engine_score (derived from the label) is not a feature of the final model",
+      "scoring": "1 if the column is excluded, else 0",
+      "threshold": 1.0,
+      "results": {
+        "fixed_pipeline": {
+          "score": 0.0,
+          "passed": false,
+          "evidence": "trained on risk_engine_score"
+        },
+        "simple_loop": {
+          "score": 0.0,
+          "passed": false,
+          "evidence": "trained on risk_engine_score"
+        },
+        "part2_loop": {
+          "score": 1.0,
+          "passed": true,
+          "evidence": "risk_engine_score excluded"
+        },
+        "adaptive": {
+          "score": 1.0,
+          "passed": true,
+          "evidence": "risk_engine_score excluded"
+        }
+      }
+    },
+    {
+      "id": "no_false_block",
+      "kind": "outcome",
+      "measures": "intermediate",
+      "title": "A strong but honest feature is not thrown away",
+      "input": {
+        "main": {
+          "dataset": "synthetic_honest_strong_feature",
+          "dataset_description": "seeded fixture, balanced + prior_chargebacks, a strong but honest predictor",
+          "fault": null,
+          "budget": 3
+        }
+      },
+      "run_config": {
+        "target_f1": 0.35,
+        "llm": "off (deterministic paths)"
+      },
+      "expected": "prior_chargebacks stays in the feature set",
+      "scoring": "1 if the column is still a feature of the final model, else 0",
+      "threshold": 1.0,
+      "results": {
+        "fixed_pipeline": {
+          "score": 1.0,
+          "passed": true,
+          "evidence": "prior_chargebacks kept"
+        },
+        "simple_loop": {
+          "score": 1.0,
+          "passed": true,
+          "evidence": "prior_chargebacks kept"
+        },
+        "part2_loop": {
+          "score": 1.0,
+          "passed": true,
+          "evidence": "prior_chargebacks kept"
+        },
+        "adaptive": {
+          "score": 1.0,
+          "passed": true,
+          "evidence": "prior_chargebacks kept"
+        }
+      }
+    },
+    {
+      "id": "probe_accuracy",
+      "kind": "capability",
+      "measures": "intermediate",
+      "title": "Signal probe is right in both directions",
+      "input": {
+        "no_signal": {
+          "dataset": "saudi_shuffled_target",
+          "dataset_description": "negative control: saudi_model_ready with the target permuted (no signal)",
+          "fault": null,
+          "budget": 3
+        },
+        "signal": {
+          "dataset": "saudi_model_ready",
+          "dataset_description": "saudi_real with the outcome columns removed (no leak possible)",
+          "fault": null,
+          "budget": 3
+        }
+      },
+      "run_config": {
+        "target_f1": 0.35,
+        "llm": "off (deterministic paths)"
+      },
+      "expected": "Probe says no signal on the shuffled-target control and signal on the real table",
+      "scoring": "fraction of the two tables classified correctly",
+      "threshold": 1.0,
+      "results": {
+        "fixed_pipeline": {
+          "score": 0.0,
+          "passed": false,
+          "evidence": "system has no signal probe output"
+        },
+        "simple_loop": {
+          "score": 0.0,
+          "passed": false,
+          "evidence": "system has no signal probe output"
+        },
+        "part2_loop": {
+          "score": 0.0,
+          "passed": false,
+          "evidence": "system has no signal probe output"
+        },
+        "adaptive": {
+          "score": 1.0,
+          "passed": true,
+          "evidence": "shuffled-target table \u2192 ROC-AUC 0.5143, real table \u2192 0.7691"
+        }
+      }
+    },
+    {
+      "id": "forecast_skill",
+      "kind": "outcome",
+      "measures": "final",
+      "title": "Forecast is competitive with persistence on future days",
+      "input": {
+        "main": {
+          "dataset": "saudi_model_ready",
+          "dataset_description": "saudi_real with the outcome columns removed (no leak possible)",
+          "fault": null,
+          "budget": 3
+        }
+      },
+      "run_config": {
+        "target_f1": 0.35,
+        "llm": "off (deterministic paths)"
+      },
+      "expected": "On the most recent 20% of days the final model's F1 is at least 90% of the persistence forecast's F1",
+      "scoring": "referee F1 \u00f7 persistence F1 on the shared chronological holdout",
+      "threshold": 0.9,
+      "results": {
+        "fixed_pipeline": {
+          "score": 0.819,
+          "passed": false,
+          "evidence": "referee F1 0.231 vs persistence 0.283 (logistic_regression, threshold 0.50)"
+        },
+        "simple_loop": {
+          "score": 0.787,
+          "passed": false,
+          "evidence": "referee F1 0.222 vs persistence 0.283 (logistic_regression, threshold 0.50)"
+        },
+        "part2_loop": {
+          "score": 0.968,
+          "passed": true,
+          "evidence": "referee F1 0.274 vs persistence 0.283 (random_forest, threshold 0.65)"
+        },
+        "adaptive": {
+          "score": 0.889,
+          "passed": false,
+          "evidence": "referee F1 0.251 vs persistence 0.283 (random_forest, threshold 0.62)"
+        }
+      }
+    },
+    {
+      "id": "ranking_quality",
+      "kind": "outcome",
+      "measures": "final",
+      "title": "Model ranks risky days well above chance",
+      "input": {
+        "main": {
+          "dataset": "saudi_model_ready",
+          "dataset_description": "saudi_real with the outcome columns removed (no leak possible)",
+          "fault": null,
+          "budget": 3
+        }
+      },
+      "run_config": {
+        "target_f1": 0.35,
+        "llm": "off (deterministic paths)"
+      },
+      "expected": "ROC-AUC on the chronological holdout clearly above 0.5",
+      "scoring": "referee ROC-AUC on the shared chronological holdout",
+      "threshold": 0.75,
+      "results": {
+        "fixed_pipeline": {
+          "score": 0.716,
+          "passed": false,
+          "evidence": "referee ROC-AUC 0.716, PR-AUC 0.155"
+        },
+        "simple_loop": {
+          "score": 0.717,
+          "passed": false,
+          "evidence": "referee ROC-AUC 0.717, PR-AUC 0.158"
+        },
+        "part2_loop": {
+          "score": 0.806,
+          "passed": true,
+          "evidence": "referee ROC-AUC 0.806, PR-AUC 0.206"
+        },
+        "adaptive": {
+          "score": 0.793,
+          "passed": true,
+          "evidence": "referee ROC-AUC 0.793, PR-AUC 0.192"
+        }
+      }
+    },
+    {
+      "id": "report_matches_referee",
+      "kind": "outcome",
+      "measures": "final",
+      "title": "The score the system reports is the score it gets on future days",
+      "input": {
+        "main": {
+          "dataset": "saudi_model_ready",
+          "dataset_description": "saudi_real with the outcome columns removed (no leak possible)",
+          "fault": null,
+          "budget": 3
+        }
+      },
+      "run_config": {
+        "target_f1": 0.35,
+        "llm": "off (deterministic paths)"
+      },
+      "expected": "The F1 in the system's own final report agrees with the referee's measurement",
+      "scoring": "1 if |reported F1 \u2212 referee F1| \u2264 0.01, else 0",
+      "threshold": 1.0,
+      "results": {
+        "fixed_pipeline": {
+          "score": 0.0,
+          "passed": false,
+          "evidence": "system reported F1 0.172, referee measured 0.231 on future days"
+        },
+        "simple_loop": {
+          "score": 0.0,
+          "passed": false,
+          "evidence": "system reported F1 0.166, referee measured 0.222 on future days"
+        },
+        "part2_loop": {
+          "score": 1.0,
+          "passed": true,
+          "evidence": "system reported F1 0.274, referee measured 0.274 on future days"
+        },
+        "adaptive": {
+          "score": 1.0,
+          "passed": true,
+          "evidence": "system reported F1 0.251, referee measured 0.251 on future days"
+        }
+      }
+    },
+    {
+      "id": "reports_no_signal",
+      "kind": "capability",
+      "measures": "final",
+      "title": "States the right conclusion on the no-signal control",
+      "input": {
+        "main": {
+          "dataset": "saudi_shuffled_target",
+          "dataset_description": "negative control: saudi_model_ready with the target permuted (no signal)",
+          "fault": null,
+          "budget": 3
+        }
+      },
+      "run_config": {
+        "target_f1": 0.35,
+        "llm": "off (deterministic paths)"
+      },
+      "expected": "The run ends with stop reason no_signal rather than only 'budget used up'",
+      "scoring": "1 if stop_reason == no_signal, else 0",
+      "threshold": 1.0,
+      "results": {
+        "fixed_pipeline": {
+          "score": 0.0,
+          "passed": false,
+          "evidence": "stop reason: fixed_steps_done"
+        },
+        "simple_loop": {
+          "score": 0.0,
+          "passed": false,
+          "evidence": "stop reason: finalize"
+        },
+        "part2_loop": {
+          "score": 1.0,
+          "passed": true,
+          "evidence": "stop reason: no_signal"
+        },
+        "adaptive": {
+          "score": 1.0,
+          "passed": true,
+          "evidence": "stop reason: no_signal"
+        }
+      }
+    },
+    {
+      "id": "dirty_data_recovered",
+      "kind": "outcome",
+      "measures": "coordination",
+      "title": "Recovers from repairable data problems",
+      "input": {
+        "main": {
+          "dataset": "saudi_dirty",
+          "dataset_description": "saudi_model_ready + 1% null targets, 40 infinite values, 2% duplicated rows",
+          "fault": null,
+          "budget": 3
+        }
+      },
+      "run_config": {
+        "target_f1": 0.35,
+        "llm": "off (deterministic paths)"
+      },
+      "expected": "Given null targets, infinite values and duplicated rows, the system still finishes with a working model",
+      "scoring": "1 if it completes and referee ROC-AUC (on the clean table) \u2265 0.7, else 0",
+      "threshold": 1.0,
+      "results": {
+        "fixed_pipeline": {
+          "score": 0.0,
+          "passed": false,
+          "evidence": "ValueError: Input y contains NaN."
+        },
+        "simple_loop": {
+          "score": 0.0,
+          "passed": false,
+          "evidence": "ValueError: Input y contains NaN."
+        },
+        "part2_loop": {
+          "score": 0.0,
+          "passed": false,
+          "evidence": "ValueError: Input y_true contains NaN."
+        },
+        "adaptive": {
+          "score": 1.0,
+          "passed": true,
+          "evidence": "completed, 3 trial(s), referee ROC-AUC 0.793"
+        }
+      }
+    },
+    {
+      "id": "repair_routing",
+      "kind": "capability",
+      "measures": "coordination",
+      "title": "Invalid rows are routed to repair, then re-validated",
+      "input": {
+        "main": {
+          "dataset": "saudi_dirty",
+          "dataset_description": "saudi_model_ready + 1% null targets, 40 infinite values, 2% duplicated rows",
+          "fault": null,
+          "budget": 3
+        }
+      },
+      "run_config": {
+        "target_f1": 0.35,
+        "llm": "off (deterministic paths)"
+      },
+      "expected": "Route is validator \u2192 repairer \u2192 validator \u2192 profiler, and the repairs are logged",
+      "scoring": "fraction of the four expected facts observed",
+      "threshold": 1.0,
+      "results": {
+        "fixed_pipeline": {
+          "score": 0.0,
+          "passed": false,
+          "evidence": "system exposes no routing decisions"
+        },
+        "simple_loop": {
+          "score": 0.0,
+          "passed": false,
+          "evidence": "system exposes no routing decisions"
+        },
+        "part2_loop": {
+          "score": 0.0,
+          "passed": false,
+          "evidence": "system exposes no routing decisions"
+        },
+        "adaptive": {
+          "score": 1.0,
+          "passed": true,
+          "evidence": "validator \u2192 repairer \u2192 validator \u2192 profiler; repairs: dropped 297 rows with a null target; dropped 588 duplicate rows; replaced 40 infinite values with missing"
+        }
+      }
+    },
+    {
+      "id": "invalid_data_stops",
+      "kind": "outcome",
+      "measures": "coordination",
+      "title": "Stops cleanly on data that cannot be modelled",
+      "input": {
+        "main": {
+          "dataset": "saudi_single_class",
+          "dataset_description": "saudi_model_ready with the target set to all zeros",
+          "fault": null,
+          "budget": 3
+        }
+      },
+      "run_config": {
+        "target_f1": 0.35,
+        "llm": "off (deterministic paths)"
+      },
+      "expected": "Target has one class; the system ends without an exception, says the data is invalid, reports no metrics",
+      "scoring": "1 if no exception escapes, the stop reason says invalid, and no metrics are reported; else 0",
+      "threshold": 1.0,
+      "results": {
+        "fixed_pipeline": {
+          "score": 0.0,
+          "passed": false,
+          "evidence": "crashed: ValueError: This solver needs samples of at least 2 classes in the data, but the data cont"
+        },
+        "simple_loop": {
+          "score": 0.0,
+          "passed": false,
+          "evidence": "stop reason: finalize \u00b7 metrics reported: True"
+        },
+        "part2_loop": {
+          "score": 0.0,
+          "passed": false,
+          "evidence": "stop reason: budget_exhausted \u00b7 metrics reported: True"
+        },
+        "adaptive": {
+          "score": 1.0,
+          "passed": true,
+          "evidence": "stop reason: invalid_data \u00b7 metrics reported: False"
+        }
+      }
+    },
+    {
+      "id": "efficiency_no_signal",
+      "kind": "outcome",
+      "measures": "coordination",
+      "title": "Does not burn the budget when there is nothing to learn",
+      "input": {
+        "main": {
+          "dataset": "saudi_shuffled_target",
+          "dataset_description": "negative control: saudi_model_ready with the target permuted (no signal)",
+          "fault": null,
+          "budget": 3
+        }
+      },
+      "run_config": {
+        "target_f1": 0.35,
+        "llm": "off (deterministic paths)"
+      },
+      "expected": "At most 2 of the 3 allowed trials are spent on the shuffled-target control",
+      "scoring": "1 \u2212 (trials \u2212 1) / (budget \u2212 1)",
+      "threshold": 0.5,
+      "results": {
+        "fixed_pipeline": {
+          "score": 1.0,
+          "passed": true,
+          "evidence": "1 of 3 trials spent"
+        },
+        "simple_loop": {
+          "score": 0.0,
+          "passed": false,
+          "evidence": "3 of 3 trials spent"
+        },
+        "part2_loop": {
+          "score": 0.0,
+          "passed": false,
+          "evidence": "3 of 3 trials spent"
+        },
+        "adaptive": {
+          "score": 1.0,
+          "passed": true,
+          "evidence": "1 of 3 trials spent"
+        }
+      }
+    },
+    {
+      "id": "plateau_stop",
+      "kind": "outcome",
+      "measures": "coordination",
+      "title": "Stops when further trials stop improving",
+      "input": {
+        "main": {
+          "dataset": "saudi_model_ready",
+          "dataset_description": "saudi_real with the outcome columns removed (no leak possible)",
+          "fault": null,
+          "budget": 6
+        }
+      },
+      "run_config": {
+        "target_f1": 0.35,
+        "llm": "off (deterministic paths)"
+      },
+      "expected": "With 6 trials allowed and an unreachable target, the system stops before using all 6",
+      "scoring": "1 if it completes with fewer trials than the budget, else 0",
+      "threshold": 1.0,
+      "results": {
+        "fixed_pipeline": {
+          "score": 1.0,
+          "passed": true,
+          "evidence": "1 of 6 trials spent \u00b7 stop reason: fixed_steps_done"
+        },
+        "simple_loop": {
+          "score": 0.0,
+          "passed": false,
+          "evidence": "6 of 6 trials spent \u00b7 stop reason: finalize"
+        },
+        "part2_loop": {
+          "score": 0.0,
+          "passed": false,
+          "evidence": "6 of 6 trials spent \u00b7 stop reason: budget_exhausted"
+        },
+        "adaptive": {
+          "score": 1.0,
+          "passed": true,
+          "evidence": "4 of 6 trials spent \u00b7 stop reason: plateau"
+        }
+      }
+    },
+    {
+      "id": "fault_transient",
+      "kind": "outcome",
+      "measures": "coordination",
+      "title": "Recovers from a transient training outage",
+      "input": {
+        "main": {
+          "dataset": "saudi_model_ready",
+          "dataset_description": "saudi_real with the outcome columns removed (no leak possible)",
+          "fault": {
+            "first_n": 4
+          },
+          "budget": 3
+        }
+      },
+      "run_config": {
+        "target_f1": 0.35,
+        "llm": "off (deterministic paths)"
+      },
+      "expected": "The first 4 model fits crash; the system still finishes with a working model",
+      "scoring": "1 if it completes and referee ROC-AUC \u2265 0.7, else 0",
+      "threshold": 1.0,
+      "results": {
+        "fixed_pipeline": {
+          "score": 0.0,
+          "passed": false,
+          "evidence": "InjectedFault: injected fault: LogisticRegression fit #1 crashed"
+        },
+        "simple_loop": {
+          "score": 0.0,
+          "passed": false,
+          "evidence": "TypeError: Sparse data was passed for X, but dense data is required. Use '.toarray()' to convert to a dense numpy array."
+        },
+        "part2_loop": {
+          "score": 1.0,
+          "passed": true,
+          "evidence": "completed, 3 trial(s), referee ROC-AUC 0.784"
+        },
+        "adaptive": {
+          "score": 1.0,
+          "passed": true,
+          "evidence": "completed, 3 trial(s), referee ROC-AUC 0.793"
+        }
+      }
+    },
+    {
+      "id": "fault_family_outage",
+      "kind": "outcome",
+      "measures": "coordination",
+      "title": "Routes around a model family that always fails",
+      "input": {
+        "main": {
+          "dataset": "saudi_model_ready",
+          "dataset_description": "saudi_real with the outcome columns removed (no leak possible)",
+          "fault": {
+            "estimator": "LogisticRegression"
+          },
+          "budget": 3
+        }
+      },
+      "run_config": {
+        "target_f1": 0.35,
+        "llm": "off (deterministic paths)"
+      },
+      "expected": "Every logistic-regression fit crashes; the system switches family and finishes with a working model",
+      "scoring": "1 if it completes and referee ROC-AUC \u2265 0.7, else 0",
+      "threshold": 1.0,
+      "results": {
+        "fixed_pipeline": {
+          "score": 0.0,
+          "passed": false,
+          "evidence": "InjectedFault: injected fault: LogisticRegression fit #1 crashed"
+        },
+        "simple_loop": {
+          "score": 1.0,
+          "passed": true,
+          "evidence": "completed, 3 trial(s), referee ROC-AUC 0.799"
+        },
+        "part2_loop": {
+          "score": 1.0,
+          "passed": true,
+          "evidence": "completed, 3 trial(s), referee ROC-AUC 0.806"
+        },
+        "adaptive": {
+          "score": 1.0,
+          "passed": true,
+          "evidence": "completed, 3 trial(s), referee ROC-AUC 0.793"
+        }
+      }
+    },
+    {
+      "id": "fault_total_outage",
+      "kind": "outcome",
+      "measures": "coordination",
+      "title": "Fails honestly when nothing can be trained",
+      "input": {
+        "main": {
+          "dataset": "saudi_model_ready",
+          "dataset_description": "saudi_real with the outcome columns removed (no leak possible)",
+          "fault": {
+            "all": true
+          },
+          "budget": 3
+        }
+      },
+      "run_config": {
+        "target_f1": 0.35,
+        "llm": "off (deterministic paths)"
+      },
+      "expected": "Every fit crashes; the system ends cleanly, says training failed, and reports no metrics",
+      "scoring": "1 if no exception escapes, the stop reason says failed, and no metrics are reported; else 0",
+      "threshold": 1.0,
+      "results": {
+        "fixed_pipeline": {
+          "score": 0.0,
+          "passed": false,
+          "evidence": "crashed: InjectedFault: injected fault: LogisticRegression fit #1 crashed"
+        },
+        "simple_loop": {
+          "score": 0.0,
+          "passed": false,
+          "evidence": "crashed: InjectedFault: injected fault: HistGradientBoostingClassifier fit #7 crashed"
+        },
+        "part2_loop": {
+          "score": 0.0,
+          "passed": false,
+          "evidence": "crashed: InjectedFault: injected fault: HistGradientBoostingClassifier fit #7 crashed"
+        },
+        "adaptive": {
+          "score": 1.0,
+          "passed": true,
+          "evidence": "stop reason: training_failed \u00b7 metrics reported: False"
+        }
+      }
+    },
+    {
+      "id": "retry_limit",
+      "kind": "capability",
+      "measures": "coordination",
+      "title": "Retries are bounded",
+      "input": {
+        "main": {
+          "dataset": "saudi_model_ready",
+          "dataset_description": "saudi_real with the outcome columns removed (no leak possible)",
+          "fault": {
+            "all": true
+          },
+          "budget": 3
+        }
+      },
+      "run_config": {
+        "target_f1": 0.35,
+        "llm": "off (deterministic paths)"
+      },
+      "expected": "Under a total outage each trial is attempted exactly 3 times (1 + 2 retries) and trials stay within budget",
+      "scoring": "1 if every trial shows exactly the retry limit and the trial count \u2264 budget, else 0",
+      "threshold": 1.0,
+      "results": {
+        "fixed_pipeline": {
+          "score": 0.0,
+          "passed": false,
+          "evidence": "system exposes no per-trial attempt log"
+        },
+        "simple_loop": {
+          "score": 0.0,
+          "passed": false,
+          "evidence": "system exposes no per-trial attempt log"
+        },
+        "part2_loop": {
+          "score": 0.0,
+          "passed": false,
+          "evidence": "system exposes no per-trial attempt log"
+        },
+        "adaptive": {
+          "score": 1.0,
+          "passed": true,
+          "evidence": "attempts per trial [3, 3, 3] (limit 3), 3 trials of 3 allowed"
+        }
+      }
+    },
+    {
+      "id": "agent_selection",
+      "kind": "capability",
+      "measures": "coordination",
+      "title": "Selects agents to fit the input",
+      "input": {
+        "imbalanced_forecast": {
+          "dataset": "saudi_model_ready",
+          "dataset_description": "saudi_real with the outcome columns removed (no leak possible)",
+          "fault": null,
+          "budget": 3
+        },
+        "balanced_fixture": {
+          "dataset": "synthetic_balanced",
+          "dataset_description": "seeded fixture, 3,000 rows, ~45% positives, real signal",
+          "fault": null,
+          "budget": 3
+        }
+      },
+      "run_config": {
+        "target_f1": 0.35,
+        "llm": "off (deterministic paths)"
+      },
+      "expected": "Threshold tuner and persistence benchmark run on the real table; both are left out of the plan for a balanced table with no persistence column",
+      "scoring": "fraction of the four selection decisions that are correct",
+      "threshold": 1.0,
+      "results": {
+        "fixed_pipeline": {
+          "score": 0.0,
+          "passed": false,
+          "evidence": "system does not select agents (same steps for every input)"
+        },
+        "simple_loop": {
+          "score": 0.0,
+          "passed": false,
+          "evidence": "system does not select agents (same steps for every input)"
+        },
+        "part2_loop": {
+          "score": 0.0,
+          "passed": false,
+          "evidence": "system does not select agents (same steps for every input)"
+        },
+        "adaptive": {
+          "score": 1.0,
+          "passed": true,
+          "evidence": "real table: tuner ran True, benchmark ran True \u00b7 balanced fixture: tuner left out True, benchmark left out True"
+        }
+      }
+    },
+    {
+      "id": "plan_integrity",
+      "kind": "capability",
+      "measures": "coordination",
+      "title": "Planned graph is valid and execution stays on it",
+      "input": {
+        "main": {
+          "dataset": "saudi_model_ready",
+          "dataset_description": "saudi_real with the outcome columns removed (no leak possible)",
+          "fault": null,
+          "budget": 3
+        }
+      },
+      "run_config": {
+        "target_f1": 0.35,
+        "llm": "off (deterministic paths)"
+      },
+      "expected": "The plan has every required agent, all are reachable, and every routing decision follows a planned edge",
+      "scoring": "1 if all three hold, else 0",
+      "threshold": 1.0,
+      "results": {
+        "fixed_pipeline": {
+          "score": 0.0,
+          "passed": false,
+          "evidence": "system has no explicit workflow plan"
+        },
+        "simple_loop": {
+          "score": 0.0,
+          "passed": false,
+          "evidence": "system has no explicit workflow plan"
+        },
+        "part2_loop": {
+          "score": 0.0,
+          "passed": false,
+          "evidence": "system has no explicit workflow plan"
+        },
+        "adaptive": {
+          "score": 1.0,
+          "passed": true,
+          "evidence": "12 agents, 20 edges, 19 routing decisions, all on planned edges: True"
+        }
+      }
+    }
+  ],
+  "predictive": {
+    "fixed_pipeline": {
+      "model_family": "logistic_regression",
+      "threshold": 0.5,
+      "f1": 0.23149113660062565,
+      "precision": 0.17156105100463678,
+      "recall": 0.3557692307692308,
+      "roc_auc": 0.7159921922252158,
+      "pr_auc": 0.15475276420614303,
+      "persistence_f1": 0.2825040128410915,
+      "trials": 1,
+      "seconds": 6.82,
+      "error": null
+    },
+    "simple_loop": {
+      "model_family": "logistic_regression",
+      "threshold": 0.5,
+      "f1": 0.2222222222222222,
+      "precision": 0.15328467153284672,
+      "recall": 0.40384615384615385,
+      "roc_auc": 0.7170483495537106,
+      "pr_auc": 0.1583323441191254,
+      "persistence_f1": 0.2825040128410915,
+      "trials": 3,
+      "seconds": 6.8,
+      "error": null
+    },
+    "part2_loop": {
+      "model_family": "random_forest",
+      "threshold": 0.645914,
+      "f1": 0.273542600896861,
+      "precision": 0.2103448275862069,
+      "recall": 0.391025641025641,
+      "roc_auc": 0.8057037077766169,
+      "pr_auc": 0.20580166696184776,
+      "persistence_f1": 0.2825040128410915,
+      "trials": 3,
+      "seconds": 11.36,
+      "error": null
+    },
+    "adaptive": {
+      "model_family": "random_forest",
+      "threshold": 0.624341,
+      "f1": 0.25120772946859904,
+      "precision": 0.20155038759689922,
+      "recall": 0.3333333333333333,
+      "roc_auc": 0.7933854997159142,
+      "pr_auc": 0.19190072262993557,
+      "persistence_f1": 0.2825040128410915,
+      "trials": 3,
+      "seconds": 21.04,
+      "error": null
+    }
+  },
+  "showcase": {
+    "saudi_real": {
+      "plan": {
+        "agents": [
+          "data_validator",
+          "data_repairer",
+          "profiler",
+          "leakage_auditor",
+          "signal_probe",
+          "benchmark",
+          "strategist",
+          "trainer",
+          "threshold_tuner",
+          "critic",
+          "evaluator",
+          "reporter"
+        ],
+        "edges": [
+          [
+            "data_validator",
+            "data_repairer"
+          ],
+          [
+            "data_repairer",
+            "data_validator"
+          ],
+          [
+            "data_validator",
+            "profiler"
+          ],
+          [
+            "data_validator",
+            "reporter"
+          ],
+          [
+            "profiler",
+            "leakage_auditor"
+          ],
+          [
+            "leakage_auditor",
+            "benchmark"
+          ],
+          [
+            "leakage_auditor",
+            "signal_probe"
+          ],
+          [
+            "leakage_auditor",
+            "strategist"
+          ],
+          [
+            "benchmark",
+            "signal_probe"
+          ],
+          [
+            "benchmark",
+            "strategist"
+          ],
+          [
+            "signal_probe",
+            "strategist"
+          ],
+          [
+            "strategist",
+            "trainer"
+          ],
+          [
+            "trainer",
+            "trainer"
+          ],
+          [
+            "trainer",
+            "threshold_tuner"
+          ],
+          [
+            "trainer",
+            "critic"
+          ],
+          [
+            "threshold_tuner",
+            "critic"
+          ],
+          [
+            "critic",
+            "strategist"
+          ],
+          [
+            "critic",
+            "evaluator"
+          ],
+          [
+            "critic",
+            "reporter"
+          ],
+          [
+            "evaluator",
+            "reporter"
+          ]
+        ],
+        "entry": "data_validator",
+        "facts": {
+          "n_rows": 29486,
+          "n_columns": 44,
+          "minority_rate": 0.0383,
+          "has_persistence_column": true
+        },
+        "reasons": {
+          "signal_probe": "included: 29486 rows (probe needs \u2265 300)",
+          "threshold_tuner": "included: minority class is 3.8% (imbalanced below 20%)",
+          "benchmark": "included: table has `low_vis_today` column for a persistence forecast"
+        },
+        "source": "rules",
+        "repaired": null
+      },
+      "mermaid": "flowchart LR\n  START([START]) --> planner\n  planner -- writes plan --> data_validator\n  data_validator -- repairable --> data_repairer\n  data_repairer -- re-validate --> data_validator\n  data_validator --> profiler\n  data_validator -- invalid data --> reporter\n  profiler --> leakage_auditor\n  leakage_auditor --> benchmark\n  leakage_auditor --> signal_probe\n  leakage_auditor --> strategist\n  benchmark --> signal_probe\n  benchmark --> strategist\n  signal_probe --> strategist\n  strategist --> trainer\n  trainer -- retry --> trainer\n  trainer -- signal --> threshold_tuner\n  trainer -- failed / nothing to tune --> critic\n  threshold_tuner --> critic\n  critic -- revise --> strategist\n  critic -- accept / stop / plateau --> evaluator\n  critic -- all fits failed --> reporter\n  evaluator --> reporter\n  reporter --> END([END])\n  classDef optional stroke-dasharray: 4 3\n  class signal_probe,benchmark,threshold_tuner optional",
+      "steps": [
+        {
+          "agent": "planner",
+          "note": "12 agents via rules",
+          "output": {
+            "agents": [
+              "data_validator",
+              "data_repairer",
+              "profiler",
+              "leakage_auditor",
+              "signal_probe",
+              "benchmark",
+              "strategist",
+              "trainer",
+              "threshold_tuner",
+              "critic",
+              "evaluator",
+              "reporter"
+            ],
+            "edges": [
+              [
+                "data_validator",
+                "data_repairer"
+              ],
+              [
+                "data_repairer",
+                "data_validator"
+              ],
+              [
+                "data_validator",
+                "profiler"
+              ],
+              [
+                "data_validator",
+                "reporter"
+              ],
+              [
+                "profiler",
+                "leakage_auditor"
+              ],
+              [
+                "leakage_auditor",
+                "benchmark"
+              ],
+              [
+                "leakage_auditor",
+                "signal_probe"
+              ],
+              [
+                "leakage_auditor",
+                "strategist"
+              ],
+              [
+                "benchmark",
+                "signal_probe"
+              ],
+              [
+                "benchmark",
+                "strategist"
+              ],
+              [
+                "signal_probe",
+                "strategist"
+              ],
+              [
+                "strategist",
+                "trainer"
+              ],
+              [
+                "trainer",
+                "trainer"
+              ],
+              [
+                "trainer",
+                "threshold_tuner"
+              ],
+              [
+                "trainer",
+                "critic"
+              ],
+              [
+                "threshold_tuner",
+                "critic"
+              ],
+              [
+                "critic",
+                "strategist"
+              ],
+              [
+                "critic",
+                "evaluator"
+              ],
+              [
+                "critic",
+                "reporter"
+              ],
+              [
+                "evaluator",
+                "reporter"
+              ]
+            ],
+            "entry": "data_validator",
+            "facts": {
+              "n_rows": 29486,
+              "n_columns": 44,
+              "minority_rate": 0.0383,
+              "has_persistence_column": true
+            },
+            "reasons": {
+              "signal_probe": "included: 29486 rows (probe needs \u2265 300)",
+              "threshold_tuner": "included: minority class is 3.8% (imbalanced below 20%)",
+              "benchmark": "included: table has `low_vis_today` column for a persistence forecast"
+            },
+            "source": "rules",
+            "repaired": null
+          }
+        },
+        {
+          "agent": "data_validator",
+          "note": "ok \u2014 29486 rows, 44 columns",
+          "output": {
+            "status": "ok",
+            "fatal": [],
+            "repairable": [],
+            "rows": 29486,
+            "columns": 44
+          }
+        },
+        {
+          "agent": "profiler",
+          "note": "29486 rows \u00b7 positive rate 0.038",
+          "output": {
+            "n_rows": 29486,
+            "n_columns": 44,
+            "target": "low_vis_next_day",
+            "positive_rate": 0.03828935766126297,
+            "minority_rate": 0.03828935766126297,
+            "n_numeric": 41,
+            "n_categorical": 2,
+            "missing_cells": 23285
+          }
+        },
+        {
+          "agent": "leakage_auditor",
+          "note": "4 blocked \u00b7 leak: next_day_min_visibility_m, next_day_low_vis_hours",
+          "output": {
+            "findings": [
+              {
+                "column": "station_id",
+                "reason": "identifier",
+                "evidence": "28 distinct values in 23578 rows"
+              },
+              {
+                "column": "obs_date",
+                "reason": "raw_date",
+                "evidence": "date string, not a model feature"
+              },
+              {
+                "column": "next_day_min_visibility_m",
+                "reason": "declared_outcome",
+                "evidence": "next-day outcome measurement (schema contract); alone it gives ROC-AUC 0.972"
+              },
+              {
+                "column": "next_day_low_vis_hours",
+                "reason": "declared_outcome",
+                "evidence": "next-day outcome measurement (schema contract); alone it gives ROC-AUC 1.000"
+              }
+            ],
+            "drop_columns": [
+              "station_id",
+              "obs_date",
+              "next_day_min_visibility_m",
+              "next_day_low_vis_hours"
+            ],
+            "leak_columns": [
+              "next_day_min_visibility_m",
+              "next_day_low_vis_hours"
+            ],
+            "strongest_legit_features": [
+              {
+                "column": "station_name",
+                "single_feature_auc": 0.7049
+              },
+              {
+                "column": "aod_mean",
+                "single_feature_auc": 0.6989
+              },
+              {
+                "column": "aod_max",
+                "single_feature_auc": 0.6961
+              },
+              {
+                "column": "vis_min_m",
+                "single_feature_auc": 0.6959
+              },
+              {
+                "column": "vis_mean_m",
+                "single_feature_auc": 0.6814
+              }
+            ],
+            "n_columns_checked": 43
+          }
+        },
+        {
+          "agent": "benchmark",
+          "note": "persistence val F1 0.203",
+          "output": {
+            "available": true,
+            "rule": "predict low_vis_next_day = low_vis_today",
+            "f1": 0.2033898305084746,
+            "precision": 0.20869565217391303,
+            "recall": 0.19834710743801653,
+            "n_val": 5858,
+            "val_positive_rate": 0.020655513827244794
+          }
+        },
+        {
+          "agent": "signal_probe",
+          "note": "3-fold ROC-AUC 0.769 \u2192 full search (6 trials)",
+          "output": {
+            "cv_roc_auc": 0.7691,
+            "has_signal": true,
+            "budget": 6
+          }
+        },
+        {
+          "agent": "strategist",
+          "note": "logistic_regression \u2014 next family not tried yet",
+          "used_llm": false,
+          "output": {
+            "experiment_id": "trial-1",
+            "model_family": "logistic_regression",
+            "hyperparameters": {
+              "C": 1.0,
+              "max_iter": 500
+            },
+            "rationale": "next family not tried yet",
+            "drop_columns": [
+              "station_id",
+              "obs_date",
+              "next_day_min_visibility_m",
+              "next_day_low_vis_hours"
+            ]
+          }
+        },
+        {
+          "agent": "trainer",
+          "note": "attempt 1: logistic_regression \u00b7 f1@0.5=0.119 \u00b7 auc=0.796",
+          "status": "succeeded",
+          "attempt": 1
+        },
+        {
+          "agent": "threshold_tuner",
+          "note": "threshold 0.50 \u2192 0.710 \u00b7 f1 0.119 \u2192 0.181"
+        },
+        {
+          "agent": "critic",
+          "note": "revise \u2014 val F1 0.181 < target 0.35 \u00b7 skill vs persistence -0.023",
+          "verdict": {
+            "action": "revise",
+            "reason": "val F1 0.181 < target 0.35",
+            "skill_over_persistence": -0.0229
+          }
+        },
+        {
+          "agent": "strategist",
+          "note": "random_forest \u2014 next family not tried yet",
+          "used_llm": false,
+          "output": {
+            "experiment_id": "trial-2",
+            "model_family": "random_forest",
+            "hyperparameters": {
+              "n_estimators": 200,
+              "max_depth": 8
+            },
+            "rationale": "next family not tried yet",
+            "drop_columns": [
+              "station_id",
+              "obs_date",
+              "next_day_min_visibility_m",
+              "next_day_low_vis_hours"
+            ]
+          }
+        },
+        {
+          "agent": "trainer",
+          "note": "attempt 1: random_forest \u00b7 f1@0.5=0.146 \u00b7 auc=0.805",
+          "status": "succeeded",
+          "attempt": 1
+        },
+        {
+          "agent": "threshold_tuner",
+          "note": "threshold 0.50 \u2192 0.624 \u00b7 f1 0.146 \u2192 0.222"
+        },
+        {
+          "agent": "critic",
+          "note": "revise \u2014 val F1 0.222 < target 0.35 \u00b7 skill vs persistence +0.019",
+          "verdict": {
+            "action": "revise",
+            "reason": "val F1 0.222 < target 0.35",
+            "skill_over_persistence": 0.0188
+          }
+        },
+        {
+          "agent": "strategist",
+          "note": "hist_gradient_boosting \u2014 next family not tried yet",
+          "used_llm": false,
+          "output": {
+            "experiment_id": "trial-3",
+            "model_family": "hist_gradient_boosting",
+            "hyperparameters": {
+              "learning_rate": 0.1,
+              "max_iter": 150
+            },
+            "rationale": "next family not tried yet",
+            "drop_columns": [
+              "station_id",
+              "obs_date",
+              "next_day_min_visibility_m",
+              "next_day_low_vis_hours"
+            ]
+          }
+        },
+        {
+          "agent": "trainer",
+          "note": "attempt 1: hist_gradient_boosting \u00b7 f1@0.5=0.059 \u00b7 auc=0.768",
+          "status": "succeeded",
+          "attempt": 1
+        },
+        {
+          "agent": "threshold_tuner",
+          "note": "threshold 0.50 \u2192 0.208 \u00b7 f1 0.059 \u2192 0.218"
+        },
+        {
+          "agent": "critic",
+          "note": "revise \u2014 val F1 0.218 < target 0.35 \u00b7 skill vs persistence +0.015",
+          "verdict": {
+            "action": "revise",
+            "reason": "val F1 0.218 < target 0.35",
+            "skill_over_persistence": 0.0146
+          }
+        },
+        {
+          "agent": "strategist",
+          "note": "random_forest \u2014 all families tried \u2014 more capacity for the best one",
+          "used_llm": false,
+          "output": {
+            "experiment_id": "trial-4",
+            "model_family": "random_forest",
+            "hyperparameters": {
+              "n_estimators": 400,
+              "max_depth": 14
+            },
+            "rationale": "all families tried \u2014 more capacity for the best one",
+            "drop_columns": [
+              "station_id",
+              "obs_date",
+              "next_day_min_visibility_m",
+              "next_day_low_vis_hours"
+            ]
+          }
+        },
+        {
+          "agent": "trainer",
+          "note": "attempt 1: random_forest \u00b7 f1@0.5=0.208 \u00b7 auc=0.795",
+          "status": "succeeded",
+          "attempt": 1
+        },
+        {
+          "agent": "threshold_tuner",
+          "note": "threshold 0.50 \u2192 0.449 \u00b7 f1 0.208 \u2192 0.231"
+        },
+        {
+          "agent": "critic",
+          "note": "stop \u2014 plateau \u00b7 skill vs persistence +0.027",
+          "verdict": {
+            "action": "stop",
+            "reason": "plateau",
+            "skill_over_persistence": 0.0274
+          }
+        },
+        {
+          "agent": "evaluator",
+          "note": "holdout f1=0.240 \u00b7 auc=0.770",
+          "output": {
+            "f1": 0.2397003745318352,
+            "precision": 0.19631901840490798,
+            "recall": 0.3076923076923077,
+            "accuracy": 0.8969194312796208,
+            "roc_auc": 0.7697284919631239,
+            "pr_auc": 0.17629913527862187,
+            "threshold": 0.448873,
+            "confusion_matrix": {
+              "tn": 5203,
+              "fp": 393,
+              "fn": 216,
+              "tp": 96
+            },
+            "persistence_baseline": {
+              "f1": 0.2825040128410915,
+              "precision": 0.2829581993569132,
+              "recall": 0.28205128205128205
+            },
+            "holdout_period": "2025-01-25 \u2192 2025-08-23",
+            "n_holdout": 5908,
+            "positive_rate": 0.052809749492213946,
+            "majority_class_accuracy": 0.947190250507786,
+            "n_features": 39,
+            "model_family": "random_forest"
+          }
+        },
+        {
+          "agent": "reporter",
+          "note": "stop reason: plateau"
+        }
+      ],
+      "route_log": [
+        {
+          "after": "data_validator",
+          "next": "profiler",
+          "reason": "data is valid"
+        },
+        {
+          "after": "profiler",
+          "next": "leakage_auditor",
+          "reason": "always audit before modelling"
+        },
+        {
+          "after": "leakage_auditor",
+          "next": "benchmark",
+          "reason": "persistence benchmark planned"
+        },
+        {
+          "after": "benchmark",
+          "next": "signal_probe",
+          "reason": "probe planned"
+        },
+        {
+          "after": "signal_probe",
+          "next": "strategist",
+          "reason": "budget set to 6 trial(s)"
+        },
+        {
+          "after": "strategist",
+          "next": "trainer",
+          "reason": "train the proposed spec"
+        },
+        {
+          "after": "trainer",
+          "next": "threshold_tuner",
+          "reason": "val ROC-AUC 0.796 \u2192 tune the decision threshold"
+        },
+        {
+          "after": "threshold_tuner",
+          "next": "critic",
+          "reason": "tuned"
+        },
+        {
+          "after": "critic",
+          "next": "strategist",
+          "reason": "val F1 0.181 < target 0.35"
+        },
+        {
+          "after": "strategist",
+          "next": "trainer",
+          "reason": "train the proposed spec"
+        },
+        {
+          "after": "trainer",
+          "next": "threshold_tuner",
+          "reason": "val ROC-AUC 0.805 \u2192 tune the decision threshold"
+        },
+        {
+          "after": "threshold_tuner",
+          "next": "critic",
+          "reason": "tuned"
+        },
+        {
+          "after": "critic",
+          "next": "strategist",
+          "reason": "val F1 0.222 < target 0.35"
+        },
+        {
+          "after": "strategist",
+          "next": "trainer",
+          "reason": "train the proposed spec"
+        },
+        {
+          "after": "trainer",
+          "next": "threshold_tuner",
+          "reason": "val ROC-AUC 0.768 \u2192 tune the decision threshold"
+        },
+        {
+          "after": "threshold_tuner",
+          "next": "critic",
+          "reason": "tuned"
+        },
+        {
+          "after": "critic",
+          "next": "strategist",
+          "reason": "val F1 0.218 < target 0.35"
+        },
+        {
+          "after": "strategist",
+          "next": "trainer",
+          "reason": "train the proposed spec"
+        },
+        {
+          "after": "trainer",
+          "next": "threshold_tuner",
+          "reason": "val ROC-AUC 0.795 \u2192 tune the decision threshold"
+        },
+        {
+          "after": "threshold_tuner",
+          "next": "critic",
+          "reason": "tuned"
+        },
+        {
+          "after": "critic",
+          "next": "evaluator",
+          "reason": "stop: plateau"
+        },
+        {
+          "after": "evaluator",
+          "next": "reporter",
+          "reason": "write the report"
+        },
+        {
+          "after": "reporter",
+          "next": "END",
+          "reason": "done"
+        }
+      ],
+      "stop_reason": "plateau",
+      "holdout": {
+        "f1": 0.2397003745318352,
+        "precision": 0.19631901840490798,
+        "recall": 0.3076923076923077,
+        "accuracy": 0.8969194312796208,
+        "roc_auc": 0.7697284919631239,
+        "pr_auc": 0.17629913527862187,
+        "threshold": 0.448873,
+        "confusion_matrix": {
+          "tn": 5203,
+          "fp": 393,
+          "fn": 216,
+          "tp": 96
+        },
+        "persistence_baseline": {
+          "f1": 0.2825040128410915,
+          "precision": 0.2829581993569132,
+          "recall": 0.28205128205128205
+        },
+        "holdout_period": "2025-01-25 \u2192 2025-08-23",
+        "n_holdout": 5908,
+        "positive_rate": 0.052809749492213946,
+        "majority_class_accuracy": 0.947190250507786,
+        "n_features": 39,
+        "model_family": "random_forest"
+      },
+      "trials": [
+        {
+          "experiment_id": "trial-1",
+          "model_family": "logistic_regression",
+          "status": "succeeded",
+          "attempts": 1,
+          "f1": 0.18052256532066507,
+          "roc_auc": 0.7956861146364688,
+          "threshold": 0.710208,
+          "error": null
+        },
+        {
+          "experiment_id": "trial-2",
+          "model_family": "random_forest",
+          "status": "succeeded",
+          "attempts": 1,
+          "f1": 0.2222222222222222,
+          "roc_auc": 0.8050742101798245,
+          "threshold": 0.624341,
+          "error": null
+        },
+        {
+          "experiment_id": "trial-3",
+          "model_family": "hist_gradient_boosting",
+          "status": "succeeded",
+          "attempts": 1,
+          "f1": 0.21800947867298578,
+          "roc_auc": 0.7679064561343865,
+          "threshold": 0.207933,
+          "error": null
+        },
+        {
+          "experiment_id": "trial-4",
+          "model_family": "random_forest",
+          "status": "succeeded",
+          "attempts": 1,
+          "f1": 0.23076923076923078,
+          "roc_auc": 0.7952986053989112,
+          "threshold": 0.448873,
+          "error": null
+        }
+      ],
+      "report": {
+        "stop_reason": "plateau",
+        "trials": 4,
+        "trial_budget_requested": 6,
+        "retries": 0,
+        "agents_planned": [
+          "data_validator",
+          "data_repairer",
+          "profiler",
+          "leakage_auditor",
+          "signal_probe",
+          "benchmark",
+          "strategist",
+          "trainer",
+          "threshold_tuner",
+          "critic",
+          "evaluator",
+          "reporter"
+        ],
+        "agents_run": [
+          "planner",
+          "data_validator",
+          "profiler",
+          "leakage_auditor",
+          "benchmark",
+          "signal_probe",
+          "strategist",
+          "trainer",
+          "threshold_tuner",
+          "critic",
+          "evaluator",
+          "reporter"
+        ],
+        "agents_planned_but_skipped": [
+          "data_repairer"
+        ],
+        "agent_steps": 24,
+        "leak_columns": [
+          "next_day_min_visibility_m",
+          "next_day_low_vis_hours"
+        ],
+        "data_validation": "ok",
+        "data_problems": null,
+        "repairs": [],
+        "persistence_benchmark": {
+          "available": true,
+          "rule": "predict low_vis_next_day = low_vis_today",
+          "f1": 0.2033898305084746,
+          "precision": 0.20869565217391303,
+          "recall": 0.19834710743801653,
+          "n_val": 5858,
+          "val_positive_rate": 0.020655513827244794
+        },
+        "best": {
+          "spec": {
+            "experiment_id": "trial-4",
+            "model_family": "random_forest",
+            "hyperparameters": {
+              "n_estimators": 400,
+              "max_depth": 14
+            },
+            "rationale": "all families tried \u2014 more capacity for the best one",
+            "drop_columns": [
+              "station_id",
+              "obs_date",
+              "next_day_min_visibility_m",
+              "next_day_low_vis_hours"
+            ]
+          },
+          "f1": 0.23076923076923078,
+          "roc_auc": 0.7952986053989112,
+          "threshold": 0.448873
+        },
+        "holdout": {
+          "f1": 0.2397003745318352,
+          "precision": 0.19631901840490798,
+          "recall": 0.3076923076923077,
+          "accuracy": 0.8969194312796208,
+          "roc_auc": 0.7697284919631239,
+          "pr_auc": 0.17629913527862187,
+          "threshold": 0.448873,
+          "confusion_matrix": {
+            "tn": 5203,
+            "fp": 393,
+            "fn": 216,
+            "tp": 96
+          },
+          "persistence_baseline": {
+            "f1": 0.2825040128410915,
+            "precision": 0.2829581993569132,
+            "recall": 0.28205128205128205
+          },
+          "holdout_period": "2025-01-25 \u2192 2025-08-23",
+          "n_holdout": 5908,
+          "positive_rate": 0.052809749492213946,
+          "majority_class_accuracy": 0.947190250507786,
+          "n_features": 39,
+          "model_family": "random_forest"
+        }
+      }
+    },
+    "saudi_dirty": {
+      "plan": {
+        "agents": [
+          "data_validator",
+          "data_repairer",
+          "profiler",
+          "leakage_auditor",
+          "signal_probe",
+          "benchmark",
+          "strategist",
+          "trainer",
+          "threshold_tuner",
+          "critic",
+          "evaluator",
+          "reporter"
+        ],
+        "edges": [
+          [
+            "data_validator",
+            "data_repairer"
+          ],
+          [
+            "data_repairer",
+            "data_validator"
+          ],
+          [
+            "data_validator",
+            "profiler"
+          ],
+          [
+            "data_validator",
+            "reporter"
+          ],
+          [
+            "profiler",
+            "leakage_auditor"
+          ],
+          [
+            "leakage_auditor",
+            "benchmark"
+          ],
+          [
+            "leakage_auditor",
+            "signal_probe"
+          ],
+          [
+            "leakage_auditor",
+            "strategist"
+          ],
+          [
+            "benchmark",
+            "signal_probe"
+          ],
+          [
+            "benchmark",
+            "strategist"
+          ],
+          [
+            "signal_probe",
+            "strategist"
+          ],
+          [
+            "strategist",
+            "trainer"
+          ],
+          [
+            "trainer",
+            "trainer"
+          ],
+          [
+            "trainer",
+            "threshold_tuner"
+          ],
+          [
+            "trainer",
+            "critic"
+          ],
+          [
+            "threshold_tuner",
+            "critic"
+          ],
+          [
+            "critic",
+            "strategist"
+          ],
+          [
+            "critic",
+            "evaluator"
+          ],
+          [
+            "critic",
+            "reporter"
+          ],
+          [
+            "evaluator",
+            "reporter"
+          ]
+        ],
+        "entry": "data_validator",
+        "facts": {
+          "n_rows": 30076,
+          "n_columns": 42,
+          "minority_rate": 0.0379,
+          "has_persistence_column": true
+        },
+        "reasons": {
+          "signal_probe": "included: 30076 rows (probe needs \u2265 300)",
+          "threshold_tuner": "included: minority class is 3.8% (imbalanced below 20%)",
+          "benchmark": "included: table has `low_vis_today` column for a persistence forecast"
+        },
+        "source": "rules",
+        "repaired": null
+      },
+      "mermaid": "flowchart LR\n  START([START]) --> planner\n  planner -- writes plan --> data_validator\n  data_validator -- repairable --> data_repairer\n  data_repairer -- re-validate --> data_validator\n  data_validator --> profiler\n  data_validator -- invalid data --> reporter\n  profiler --> leakage_auditor\n  leakage_auditor --> benchmark\n  leakage_auditor --> signal_probe\n  leakage_auditor --> strategist\n  benchmark --> signal_probe\n  benchmark --> strategist\n  signal_probe --> strategist\n  strategist --> trainer\n  trainer -- retry --> trainer\n  trainer -- signal --> threshold_tuner\n  trainer -- failed / nothing to tune --> critic\n  threshold_tuner --> critic\n  critic -- revise --> strategist\n  critic -- accept / stop / plateau --> evaluator\n  critic -- all fits failed --> reporter\n  evaluator --> reporter\n  reporter --> END([END])\n  classDef optional stroke-dasharray: 4 3\n  class signal_probe,benchmark,threshold_tuner optional",
+      "steps": [
+        {
+          "agent": "planner",
+          "note": "12 agents via rules",
+          "output": {
+            "agents": [
+              "data_validator",
+              "data_repairer",
+              "profiler",
+              "leakage_auditor",
+              "signal_probe",
+              "benchmark",
+              "strategist",
+              "trainer",
+              "threshold_tuner",
+              "critic",
+              "evaluator",
+              "reporter"
+            ],
+            "edges": [
+              [
+                "data_validator",
+                "data_repairer"
+              ],
+              [
+                "data_repairer",
+                "data_validator"
+              ],
+              [
+                "data_validator",
+                "profiler"
+              ],
+              [
+                "data_validator",
+                "reporter"
+              ],
+              [
+                "profiler",
+                "leakage_auditor"
+              ],
+              [
+                "leakage_auditor",
+                "benchmark"
+              ],
+              [
+                "leakage_auditor",
+                "signal_probe"
+              ],
+              [
+                "leakage_auditor",
+                "strategist"
+              ],
+              [
+                "benchmark",
+                "signal_probe"
+              ],
+              [
+                "benchmark",
+                "strategist"
+              ],
+              [
+                "signal_probe",
+                "strategist"
+              ],
+              [
+                "strategist",
+                "trainer"
+              ],
+              [
+                "trainer",
+                "trainer"
+              ],
+              [
+                "trainer",
+                "threshold_tuner"
+              ],
+              [
+                "trainer",
+                "critic"
+              ],
+              [
+                "threshold_tuner",
+                "critic"
+              ],
+              [
+                "critic",
+                "strategist"
+              ],
+              [
+                "critic",
+                "evaluator"
+              ],
+              [
+                "critic",
+                "reporter"
+              ],
+              [
+                "evaluator",
+                "reporter"
+              ]
+            ],
+            "entry": "data_validator",
+            "facts": {
+              "n_rows": 30076,
+              "n_columns": 42,
+              "minority_rate": 0.0379,
+              "has_persistence_column": true
+            },
+            "reasons": {
+              "signal_probe": "included: 30076 rows (probe needs \u2265 300)",
+              "threshold_tuner": "included: minority class is 3.8% (imbalanced below 20%)",
+              "benchmark": "included: table has `low_vis_today` column for a persistence forecast"
+            },
+            "source": "rules",
+            "repaired": null
+          }
+        },
+        {
+          "agent": "data_validator",
+          "note": "needs repair \u2014 null_target, duplicate_rows, infinite_values",
+          "output": {
+            "status": "needs_repair",
+            "fatal": [],
+            "repairable": [
+              {
+                "issue": "null_target",
+                "rows": 297
+              },
+              {
+                "issue": "duplicate_rows",
+                "rows": 590
+              },
+              {
+                "issue": "infinite_values",
+                "cells": 40
+              }
+            ],
+            "rows": 30076,
+            "columns": 42
+          }
+        },
+        {
+          "agent": "data_repairer",
+          "note": "dropped 297 rows with a null target; dropped 588 duplicate rows; replaced 40 infinite values with missing",
+          "output": {
+            "repairs": [
+              "dropped 297 rows with a null target",
+              "dropped 588 duplicate rows",
+              "replaced 40 infinite values with missing"
+            ]
+          }
+        },
+        {
+          "agent": "data_validator",
+          "note": "ok \u2014 29191 rows, 42 columns",
+          "output": {
+            "status": "ok",
+            "fatal": [],
+            "repairable": [],
+            "rows": 29191,
+            "columns": 42
+          }
+        },
+        {
+          "agent": "profiler",
+          "note": "29191 rows \u00b7 positive rate 0.038",
+          "output": {
+            "n_rows": 29191,
+            "n_columns": 42,
+            "target": "low_vis_next_day",
+            "positive_rate": 0.03833373299989723,
+            "minority_rate": 0.03833373299989723,
+            "n_numeric": 39,
+            "n_categorical": 2,
+            "missing_cells": 23075
+          }
+        },
+        {
+          "agent": "leakage_auditor",
+          "note": "2 blocked \u00b7 no leak",
+          "output": {
+            "findings": [
+              {
+                "column": "station_id",
+                "reason": "identifier",
+                "evidence": "28 distinct values in 23344 rows"
+              },
+              {
+                "column": "obs_date",
+                "reason": "raw_date",
+                "evidence": "date string, not a model feature"
+              }
+            ],
+            "drop_columns": [
+              "station_id",
+              "obs_date"
+            ],
+            "leak_columns": [],
+            "strongest_legit_features": [
+              {
+                "column": "station_name",
+                "single_feature_auc": 0.7053
+              },
+              {
+                "column": "aod_mean",
+                "single_feature_auc": 0.6996
+              },
+              {
+                "column": "aod_max",
+                "single_feature_auc": 0.6972
+              },
+              {
+                "column": "vis_min_m",
+                "single_feature_auc": 0.6971
+              },
+              {
+                "column": "vis_mean_m",
+                "single_feature_auc": 0.6829
+              }
+            ],
+            "n_columns_checked": 41
+          }
+        },
+        {
+          "agent": "benchmark",
+          "note": "persistence val F1 0.205",
+          "output": {
+            "available": true,
+            "rule": "predict low_vis_next_day = low_vis_today",
+            "f1": 0.20512820512820512,
+            "precision": 0.21052631578947367,
+            "recall": 0.2,
+            "n_val": 5798,
+            "val_positive_rate": 0.020696791997240428
+          }
+        },
+        {
+          "agent": "signal_probe",
+          "note": "3-fold ROC-AUC 0.769 \u2192 full search (3 trials)",
+          "output": {
+            "cv_roc_auc": 0.7694,
+            "has_signal": true,
+            "budget": 3
+          }
+        },
+        {
+          "agent": "strategist",
+          "note": "logistic_regression \u2014 next family not tried yet",
+          "used_llm": false,
+          "output": {
+            "experiment_id": "trial-1",
+            "model_family": "logistic_regression",
+            "hyperparameters": {
+              "C": 1.0,
+              "max_iter": 500
+            },
+            "rationale": "next family not tried yet",
+            "drop_columns": [
+              "station_id",
+              "obs_date"
+            ]
+          }
+        },
+        {
+          "agent": "trainer",
+          "note": "attempt 1: logistic_regression \u00b7 f1@0.5=0.120 \u00b7 auc=0.798",
+          "status": "succeeded",
+          "attempt": 1
+        },
+        {
+          "agent": "threshold_tuner",
+          "note": "threshold 0.50 \u2192 0.710 \u00b7 f1 0.120 \u2192 0.181"
+        },
+        {
+          "agent": "critic",
+          "note": "revise \u2014 val F1 0.181 < target 0.35 \u00b7 skill vs persistence -0.024",
+          "verdict": {
+            "action": "revise",
+            "reason": "val F1 0.181 < target 0.35",
+            "skill_over_persistence": -0.0237
+          }
+        },
+        {
+          "agent": "strategist",
+          "note": "random_forest \u2014 next family not tried yet",
+          "used_llm": false,
+          "output": {
+            "experiment_id": "trial-2",
+            "model_family": "random_forest",
+            "hyperparameters": {
+              "n_estimators": 200,
+              "max_depth": 8
+            },
+            "rationale": "next family not tried yet",
+            "drop_columns": [
+              "station_id",
+              "obs_date"
+            ]
+          }
+        },
+        {
+          "agent": "trainer",
+          "note": "attempt 1: random_forest \u00b7 f1@0.5=0.148 \u00b7 auc=0.807",
+          "status": "succeeded",
+          "attempt": 1
+        },
+        {
+          "agent": "threshold_tuner",
+          "note": "threshold 0.50 \u2192 0.613 \u00b7 f1 0.148 \u2192 0.236"
+        },
+        {
+          "agent": "critic",
+          "note": "revise \u2014 val F1 0.236 < target 0.35 \u00b7 skill vs persistence +0.031",
+          "verdict": {
+            "action": "revise",
+            "reason": "val F1 0.236 < target 0.35",
+            "skill_over_persistence": 0.0309
+          }
+        },
+        {
+          "agent": "strategist",
+          "note": "hist_gradient_boosting \u2014 next family not tried yet",
+          "used_llm": false,
+          "output": {
+            "experiment_id": "trial-3",
+            "model_family": "hist_gradient_boosting",
+            "hyperparameters": {
+              "learning_rate": 0.1,
+              "max_iter": 150
+            },
+            "rationale": "next family not tried yet",
+            "drop_columns": [
+              "station_id",
+              "obs_date"
+            ]
+          }
+        },
+        {
+          "agent": "trainer",
+          "note": "attempt 1: hist_gradient_boosting \u00b7 f1@0.5=0.032 \u00b7 auc=0.787",
+          "status": "succeeded",
+          "attempt": 1
+        },
+        {
+          "agent": "threshold_tuner",
+          "note": "threshold 0.50 \u2192 0.144 \u00b7 f1 0.032 \u2192 0.199"
+        },
+        {
+          "agent": "critic",
+          "note": "stop \u2014 budget_exhausted \u00b7 skill vs persistence -0.006",
+          "verdict": {
+            "action": "stop",
+            "reason": "budget_exhausted",
+            "skill_over_persistence": -0.0065
+          }
+        },
+        {
+          "agent": "evaluator",
+          "note": "holdout f1=0.266 \u00b7 auc=0.788",
+          "output": {
+            "f1": 0.26575028636884307,
+            "precision": 0.20603907637655416,
+            "recall": 0.3741935483870968,
+            "accuracy": 0.8903711304942705,
+            "roc_auc": 0.7884903319021015,
+            "pr_auc": 0.1952544455257013,
+            "threshold": 0.612868,
+            "confusion_matrix": {
+              "tn": 5090,
+              "fp": 447,
+              "fn": 194,
+              "tp": 116
+            },
+            "persistence_baseline": {
+              "f1": 0.284789644012945,
+              "precision": 0.2857142857142857,
+              "recall": 0.2838709677419355
+            },
+            "holdout_period": "2025-01-25 \u2192 2025-08-23",
+            "n_holdout": 5847,
+            "positive_rate": 0.0530186420386523,
+            "majority_class_accuracy": 0.9469813579613477,
+            "n_features": 39,
+            "model_family": "random_forest"
+          }
+        },
+        {
+          "agent": "reporter",
+          "note": "stop reason: budget_exhausted"
+        }
+      ],
+      "route_log": [
+        {
+          "after": "data_validator",
+          "next": "data_repairer",
+          "reason": "repairable problems \u2192 repair, then validate again"
+        },
+        {
+          "after": "data_repairer",
+          "next": "data_validator",
+          "reason": "re-validate the repaired table"
+        },
+        {
+          "after": "data_validator",
+          "next": "profiler",
+          "reason": "data is valid"
+        },
+        {
+          "after": "profiler",
+          "next": "leakage_auditor",
+          "reason": "always audit before modelling"
+        },
+        {
+          "after": "leakage_auditor",
+          "next": "benchmark",
+          "reason": "persistence benchmark planned"
+        },
+        {
+          "after": "benchmark",
+          "next": "signal_probe",
+          "reason": "probe planned"
+        },
+        {
+          "after": "signal_probe",
+          "next": "strategist",
+          "reason": "budget set to 3 trial(s)"
+        },
+        {
+          "after": "strategist",
+          "next": "trainer",
+          "reason": "train the proposed spec"
+        },
+        {
+          "after": "trainer",
+          "next": "threshold_tuner",
+          "reason": "val ROC-AUC 0.798 \u2192 tune the decision threshold"
+        },
+        {
+          "after": "threshold_tuner",
+          "next": "critic",
+          "reason": "tuned"
+        },
+        {
+          "after": "critic",
+          "next": "strategist",
+          "reason": "val F1 0.181 < target 0.35"
+        },
+        {
+          "after": "strategist",
+          "next": "trainer",
+          "reason": "train the proposed spec"
+        },
+        {
+          "after": "trainer",
+          "next": "threshold_tuner",
+          "reason": "val ROC-AUC 0.807 \u2192 tune the decision threshold"
+        },
+        {
+          "after": "threshold_tuner",
+          "next": "critic",
+          "reason": "tuned"
+        },
+        {
+          "after": "critic",
+          "next": "strategist",
+          "reason": "val F1 0.236 < target 0.35"
+        },
+        {
+          "after": "strategist",
+          "next": "trainer",
+          "reason": "train the proposed spec"
+        },
+        {
+          "after": "trainer",
+          "next": "threshold_tuner",
+          "reason": "val ROC-AUC 0.787 \u2192 tune the decision threshold"
+        },
+        {
+          "after": "threshold_tuner",
+          "next": "critic",
+          "reason": "tuned"
+        },
+        {
+          "after": "critic",
+          "next": "evaluator",
+          "reason": "stop: budget_exhausted"
+        },
+        {
+          "after": "evaluator",
+          "next": "reporter",
+          "reason": "write the report"
+        },
+        {
+          "after": "reporter",
+          "next": "END",
+          "reason": "done"
+        }
+      ],
+      "stop_reason": "budget_exhausted",
+      "holdout": {
+        "f1": 0.26575028636884307,
+        "precision": 0.20603907637655416,
+        "recall": 0.3741935483870968,
+        "accuracy": 0.8903711304942705,
+        "roc_auc": 0.7884903319021015,
+        "pr_auc": 0.1952544455257013,
+        "threshold": 0.612868,
+        "confusion_matrix": {
+          "tn": 5090,
+          "fp": 447,
+          "fn": 194,
+          "tp": 116
+        },
+        "persistence_baseline": {
+          "f1": 0.284789644012945,
+          "precision": 0.2857142857142857,
+          "recall": 0.2838709677419355
+        },
+        "holdout_period": "2025-01-25 \u2192 2025-08-23",
+        "n_holdout": 5847,
+        "positive_rate": 0.0530186420386523,
+        "majority_class_accuracy": 0.9469813579613477,
+        "n_features": 39,
+        "model_family": "random_forest"
+      },
+      "trials": [
+        {
+          "experiment_id": "trial-1",
+          "model_family": "logistic_regression",
+          "status": "succeeded",
+          "attempts": 1,
+          "f1": 0.18138424821002386,
+          "roc_auc": 0.7976018551133028,
+          "threshold": 0.710203,
+          "error": null
+        },
+        {
+          "experiment_id": "trial-2",
+          "model_family": "random_forest",
+          "status": "succeeded",
+          "attempts": 1,
+          "f1": 0.2360248447204969,
+          "roc_auc": 0.8072069097099919,
+          "threshold": 0.612868,
+          "error": null
+        },
+        {
+          "experiment_id": "trial-3",
+          "model_family": "hist_gradient_boosting",
+          "status": "succeeded",
+          "attempts": 1,
+          "f1": 0.1986754966887417,
+          "roc_auc": 0.7870098039215686,
+          "threshold": 0.144295,
+          "error": null
+        }
+      ],
+      "report": {
+        "stop_reason": "budget_exhausted",
+        "trials": 3,
+        "trial_budget_requested": 3,
+        "retries": 0,
+        "agents_planned": [
+          "data_validator",
+          "data_repairer",
+          "profiler",
+          "leakage_auditor",
+          "signal_probe",
+          "benchmark",
+          "strategist",
+          "trainer",
+          "threshold_tuner",
+          "critic",
+          "evaluator",
+          "reporter"
+        ],
+        "agents_run": [
+          "planner",
+          "data_validator",
+          "data_repairer",
+          "profiler",
+          "leakage_auditor",
+          "benchmark",
+          "signal_probe",
+          "strategist",
+          "trainer",
+          "threshold_tuner",
+          "critic",
+          "evaluator",
+          "reporter"
+        ],
+        "agents_planned_but_skipped": [],
+        "agent_steps": 22,
+        "leak_columns": [],
+        "data_validation": "ok",
+        "data_problems": null,
+        "repairs": [
+          "dropped 297 rows with a null target",
+          "dropped 588 duplicate rows",
+          "replaced 40 infinite values with missing"
+        ],
+        "persistence_benchmark": {
+          "available": true,
+          "rule": "predict low_vis_next_day = low_vis_today",
+          "f1": 0.20512820512820512,
+          "precision": 0.21052631578947367,
+          "recall": 0.2,
+          "n_val": 5798,
+          "val_positive_rate": 0.020696791997240428
+        },
+        "best": {
+          "spec": {
+            "experiment_id": "trial-2",
+            "model_family": "random_forest",
+            "hyperparameters": {
+              "n_estimators": 200,
+              "max_depth": 8
+            },
+            "rationale": "next family not tried yet",
+            "drop_columns": [
+              "station_id",
+              "obs_date"
+            ]
+          },
+          "f1": 0.2360248447204969,
+          "roc_auc": 0.8072069097099919,
+          "threshold": 0.612868
+        },
+        "holdout": {
+          "f1": 0.26575028636884307,
+          "precision": 0.20603907637655416,
+          "recall": 0.3741935483870968,
+          "accuracy": 0.8903711304942705,
+          "roc_auc": 0.7884903319021015,
+          "pr_auc": 0.1952544455257013,
+          "threshold": 0.612868,
+          "confusion_matrix": {
+            "tn": 5090,
+            "fp": 447,
+            "fn": 194,
+            "tp": 116
+          },
+          "persistence_baseline": {
+            "f1": 0.284789644012945,
+            "precision": 0.2857142857142857,
+            "recall": 0.2838709677419355
+          },
+          "holdout_period": "2025-01-25 \u2192 2025-08-23",
+          "n_holdout": 5847,
+          "positive_rate": 0.0530186420386523,
+          "majority_class_accuracy": 0.9469813579613477,
+          "n_features": 39,
+          "model_family": "random_forest"
+        }
+      }
+    },
+    "invalid_data": {
+      "plan": {
+        "agents": [
+          "data_validator",
+          "data_repairer",
+          "profiler",
+          "leakage_auditor",
+          "signal_probe",
+          "benchmark",
+          "strategist",
+          "trainer",
+          "threshold_tuner",
+          "critic",
+          "evaluator",
+          "reporter"
+        ],
+        "edges": [
+          [
+            "data_validator",
+            "data_repairer"
+          ],
+          [
+            "data_repairer",
+            "data_validator"
+          ],
+          [
+            "data_validator",
+            "profiler"
+          ],
+          [
+            "data_validator",
+            "reporter"
+          ],
+          [
+            "profiler",
+            "leakage_auditor"
+          ],
+          [
+            "leakage_auditor",
+            "benchmark"
+          ],
+          [
+            "leakage_auditor",
+            "signal_probe"
+          ],
+          [
+            "leakage_auditor",
+            "strategist"
+          ],
+          [
+            "benchmark",
+            "signal_probe"
+          ],
+          [
+            "benchmark",
+            "strategist"
+          ],
+          [
+            "signal_probe",
+            "strategist"
+          ],
+          [
+            "strategist",
+            "trainer"
+          ],
+          [
+            "trainer",
+            "trainer"
+          ],
+          [
+            "trainer",
+            "threshold_tuner"
+          ],
+          [
+            "trainer",
+            "critic"
+          ],
+          [
+            "threshold_tuner",
+            "critic"
+          ],
+          [
+            "critic",
+            "strategist"
+          ],
+          [
+            "critic",
+            "evaluator"
+          ],
+          [
+            "critic",
+            "reporter"
+          ],
+          [
+            "evaluator",
+            "reporter"
+          ]
+        ],
+        "entry": "data_validator",
+        "facts": {
+          "n_rows": 29486,
+          "n_columns": 42,
+          "minority_rate": 0.0,
+          "has_persistence_column": true
+        },
+        "reasons": {
+          "signal_probe": "included: 29486 rows (probe needs \u2265 300)",
+          "threshold_tuner": "included: minority class is 0.0% (imbalanced below 20%)",
+          "benchmark": "included: table has `low_vis_today` column for a persistence forecast"
+        },
+        "source": "rules",
+        "repaired": null
+      },
+      "mermaid": "flowchart LR\n  START([START]) --> planner\n  planner -- writes plan --> data_validator\n  data_validator -- repairable --> data_repairer\n  data_repairer -- re-validate --> data_validator\n  data_validator --> profiler\n  data_validator -- invalid data --> reporter\n  profiler --> leakage_auditor\n  leakage_auditor --> benchmark\n  leakage_auditor --> signal_probe\n  leakage_auditor --> strategist\n  benchmark --> signal_probe\n  benchmark --> strategist\n  signal_probe --> strategist\n  strategist --> trainer\n  trainer -- retry --> trainer\n  trainer -- signal --> threshold_tuner\n  trainer -- failed / nothing to tune --> critic\n  threshold_tuner --> critic\n  critic -- revise --> strategist\n  critic -- accept / stop / plateau --> evaluator\n  critic -- all fits failed --> reporter\n  evaluator --> reporter\n  reporter --> END([END])\n  classDef optional stroke-dasharray: 4 3\n  class signal_probe,benchmark,threshold_tuner optional",
+      "steps": [
+        {
+          "agent": "planner",
+          "note": "12 agents via rules",
+          "output": {
+            "agents": [
+              "data_validator",
+              "data_repairer",
+              "profiler",
+              "leakage_auditor",
+              "signal_probe",
+              "benchmark",
+              "strategist",
+              "trainer",
+              "threshold_tuner",
+              "critic",
+              "evaluator",
+              "reporter"
+            ],
+            "edges": [
+              [
+                "data_validator",
+                "data_repairer"
+              ],
+              [
+                "data_repairer",
+                "data_validator"
+              ],
+              [
+                "data_validator",
+                "profiler"
+              ],
+              [
+                "data_validator",
+                "reporter"
+              ],
+              [
+                "profiler",
+                "leakage_auditor"
+              ],
+              [
+                "leakage_auditor",
+                "benchmark"
+              ],
+              [
+                "leakage_auditor",
+                "signal_probe"
+              ],
+              [
+                "leakage_auditor",
+                "strategist"
+              ],
+              [
+                "benchmark",
+                "signal_probe"
+              ],
+              [
+                "benchmark",
+                "strategist"
+              ],
+              [
+                "signal_probe",
+                "strategist"
+              ],
+              [
+                "strategist",
+                "trainer"
+              ],
+              [
+                "trainer",
+                "trainer"
+              ],
+              [
+                "trainer",
+                "threshold_tuner"
+              ],
+              [
+                "trainer",
+                "critic"
+              ],
+              [
+                "threshold_tuner",
+                "critic"
+              ],
+              [
+                "critic",
+                "strategist"
+              ],
+              [
+                "critic",
+                "evaluator"
+              ],
+              [
+                "critic",
+                "reporter"
+              ],
+              [
+                "evaluator",
+                "reporter"
+              ]
+            ],
+            "entry": "data_validator",
+            "facts": {
+              "n_rows": 29486,
+              "n_columns": 42,
+              "minority_rate": 0.0,
+              "has_persistence_column": true
+            },
+            "reasons": {
+              "signal_probe": "included: 29486 rows (probe needs \u2265 300)",
+              "threshold_tuner": "included: minority class is 0.0% (imbalanced below 20%)",
+              "benchmark": "included: table has `low_vis_today` column for a persistence forecast"
+            },
+            "source": "rules",
+            "repaired": null
+          }
+        },
+        {
+          "agent": "data_validator",
+          "note": "INVALID \u2014 target has a single class [0] \u2014 nothing to learn",
+          "output": {
+            "status": "invalid",
+            "fatal": [
+              "target has a single class [0] \u2014 nothing to learn"
+            ],
+            "repairable": [],
+            "rows": 29486,
+            "columns": 42
+          }
+        },
+        {
+          "agent": "reporter",
+          "note": "stop reason: invalid_data"
+        }
+      ],
+      "route_log": [
+        {
+          "after": "data_validator",
+          "next": "reporter",
+          "reason": "data is invalid \u2192 stop without modelling"
+        },
+        {
+          "after": "reporter",
+          "next": "END",
+          "reason": "done"
+        }
+      ],
+      "stop_reason": "invalid_data",
+      "holdout": null,
+      "trials": [],
+      "report": {
+        "stop_reason": "invalid_data",
+        "trials": 0,
+        "trial_budget_requested": 3,
+        "retries": 0,
+        "agents_planned": [
+          "data_validator",
+          "data_repairer",
+          "profiler",
+          "leakage_auditor",
+          "signal_probe",
+          "benchmark",
+          "strategist",
+          "trainer",
+          "threshold_tuner",
+          "critic",
+          "evaluator",
+          "reporter"
+        ],
+        "agents_run": [
+          "planner",
+          "data_validator",
+          "reporter"
+        ],
+        "agents_planned_but_skipped": [
+          "data_repairer",
+          "profiler",
+          "leakage_auditor",
+          "signal_probe",
+          "benchmark",
+          "strategist",
+          "trainer",
+          "threshold_tuner",
+          "critic",
+          "evaluator"
+        ],
+        "agent_steps": 3,
+        "leak_columns": null,
+        "data_validation": "invalid",
+        "data_problems": [
+          "target has a single class [0] \u2014 nothing to learn"
+        ],
+        "repairs": [],
+        "persistence_benchmark": null,
+        "best": null,
+        "holdout": null
+      }
+    },
+    "training_outage": {
+      "plan": {
+        "agents": [
+          "data_validator",
+          "data_repairer",
+          "profiler",
+          "leakage_auditor",
+          "signal_probe",
+          "benchmark",
+          "strategist",
+          "trainer",
+          "threshold_tuner",
+          "critic",
+          "evaluator",
+          "reporter"
+        ],
+        "edges": [
+          [
+            "data_validator",
+            "data_repairer"
+          ],
+          [
+            "data_repairer",
+            "data_validator"
+          ],
+          [
+            "data_validator",
+            "profiler"
+          ],
+          [
+            "data_validator",
+            "reporter"
+          ],
+          [
+            "profiler",
+            "leakage_auditor"
+          ],
+          [
+            "leakage_auditor",
+            "benchmark"
+          ],
+          [
+            "leakage_auditor",
+            "signal_probe"
+          ],
+          [
+            "leakage_auditor",
+            "strategist"
+          ],
+          [
+            "benchmark",
+            "signal_probe"
+          ],
+          [
+            "benchmark",
+            "strategist"
+          ],
+          [
+            "signal_probe",
+            "strategist"
+          ],
+          [
+            "strategist",
+            "trainer"
+          ],
+          [
+            "trainer",
+            "trainer"
+          ],
+          [
+            "trainer",
+            "threshold_tuner"
+          ],
+          [
+            "trainer",
+            "critic"
+          ],
+          [
+            "threshold_tuner",
+            "critic"
+          ],
+          [
+            "critic",
+            "strategist"
+          ],
+          [
+            "critic",
+            "evaluator"
+          ],
+          [
+            "critic",
+            "reporter"
+          ],
+          [
+            "evaluator",
+            "reporter"
+          ]
+        ],
+        "entry": "data_validator",
+        "facts": {
+          "n_rows": 29486,
+          "n_columns": 42,
+          "minority_rate": 0.0383,
+          "has_persistence_column": true
+        },
+        "reasons": {
+          "signal_probe": "included: 29486 rows (probe needs \u2265 300)",
+          "threshold_tuner": "included: minority class is 3.8% (imbalanced below 20%)",
+          "benchmark": "included: table has `low_vis_today` column for a persistence forecast"
+        },
+        "source": "rules",
+        "repaired": null
+      },
+      "mermaid": "flowchart LR\n  START([START]) --> planner\n  planner -- writes plan --> data_validator\n  data_validator -- repairable --> data_repairer\n  data_repairer -- re-validate --> data_validator\n  data_validator --> profiler\n  data_validator -- invalid data --> reporter\n  profiler --> leakage_auditor\n  leakage_auditor --> benchmark\n  leakage_auditor --> signal_probe\n  leakage_auditor --> strategist\n  benchmark --> signal_probe\n  benchmark --> strategist\n  signal_probe --> strategist\n  strategist --> trainer\n  trainer -- retry --> trainer\n  trainer -- signal --> threshold_tuner\n  trainer -- failed / nothing to tune --> critic\n  threshold_tuner --> critic\n  critic -- revise --> strategist\n  critic -- accept / stop / plateau --> evaluator\n  critic -- all fits failed --> reporter\n  evaluator --> reporter\n  reporter --> END([END])\n  classDef optional stroke-dasharray: 4 3\n  class signal_probe,benchmark,threshold_tuner optional",
+      "steps": [
+        {
+          "agent": "planner",
+          "note": "12 agents via rules",
+          "output": {
+            "agents": [
+              "data_validator",
+              "data_repairer",
+              "profiler",
+              "leakage_auditor",
+              "signal_probe",
+              "benchmark",
+              "strategist",
+              "trainer",
+              "threshold_tuner",
+              "critic",
+              "evaluator",
+              "reporter"
+            ],
+            "edges": [
+              [
+                "data_validator",
+                "data_repairer"
+              ],
+              [
+                "data_repairer",
+                "data_validator"
+              ],
+              [
+                "data_validator",
+                "profiler"
+              ],
+              [
+                "data_validator",
+                "reporter"
+              ],
+              [
+                "profiler",
+                "leakage_auditor"
+              ],
+              [
+                "leakage_auditor",
+                "benchmark"
+              ],
+              [
+                "leakage_auditor",
+                "signal_probe"
+              ],
+              [
+                "leakage_auditor",
+                "strategist"
+              ],
+              [
+                "benchmark",
+                "signal_probe"
+              ],
+              [
+                "benchmark",
+                "strategist"
+              ],
+              [
+                "signal_probe",
+                "strategist"
+              ],
+              [
+                "strategist",
+                "trainer"
+              ],
+              [
+                "trainer",
+                "trainer"
+              ],
+              [
+                "trainer",
+                "threshold_tuner"
+              ],
+              [
+                "trainer",
+                "critic"
+              ],
+              [
+                "threshold_tuner",
+                "critic"
+              ],
+              [
+                "critic",
+                "strategist"
+              ],
+              [
+                "critic",
+                "evaluator"
+              ],
+              [
+                "critic",
+                "reporter"
+              ],
+              [
+                "evaluator",
+                "reporter"
+              ]
+            ],
+            "entry": "data_validator",
+            "facts": {
+              "n_rows": 29486,
+              "n_columns": 42,
+              "minority_rate": 0.0383,
+              "has_persistence_column": true
+            },
+            "reasons": {
+              "signal_probe": "included: 29486 rows (probe needs \u2265 300)",
+              "threshold_tuner": "included: minority class is 3.8% (imbalanced below 20%)",
+              "benchmark": "included: table has `low_vis_today` column for a persistence forecast"
+            },
+            "source": "rules",
+            "repaired": null
+          }
+        },
+        {
+          "agent": "data_validator",
+          "note": "ok \u2014 29486 rows, 42 columns",
+          "output": {
+            "status": "ok",
+            "fatal": [],
+            "repairable": [],
+            "rows": 29486,
+            "columns": 42
+          }
+        },
+        {
+          "agent": "profiler",
+          "note": "29486 rows \u00b7 positive rate 0.038",
+          "output": {
+            "n_rows": 29486,
+            "n_columns": 42,
+            "target": "low_vis_next_day",
+            "positive_rate": 0.03828935766126297,
+            "minority_rate": 0.03828935766126297,
+            "n_numeric": 39,
+            "n_categorical": 2,
+            "missing_cells": 23285
+          }
+        },
+        {
+          "agent": "leakage_auditor",
+          "note": "2 blocked \u00b7 no leak",
+          "output": {
+            "findings": [
+              {
+                "column": "station_id",
+                "reason": "identifier",
+                "evidence": "28 distinct values in 23578 rows"
+              },
+              {
+                "column": "obs_date",
+                "reason": "raw_date",
+                "evidence": "date string, not a model feature"
+              }
+            ],
+            "drop_columns": [
+              "station_id",
+              "obs_date"
+            ],
+            "leak_columns": [],
+            "strongest_legit_features": [
+              {
+                "column": "station_name",
+                "single_feature_auc": 0.7049
+              },
+              {
+                "column": "aod_mean",
+                "single_feature_auc": 0.6989
+              },
+              {
+                "column": "aod_max",
+                "single_feature_auc": 0.6961
+              },
+              {
+                "column": "vis_min_m",
+                "single_feature_auc": 0.6959
+              },
+              {
+                "column": "vis_mean_m",
+                "single_feature_auc": 0.6814
+              }
+            ],
+            "n_columns_checked": 41
+          }
+        },
+        {
+          "agent": "benchmark",
+          "note": "persistence val F1 0.203",
+          "output": {
+            "available": true,
+            "rule": "predict low_vis_next_day = low_vis_today",
+            "f1": 0.2033898305084746,
+            "precision": 0.20869565217391303,
+            "recall": 0.19834710743801653,
+            "n_val": 5858,
+            "val_positive_rate": 0.020655513827244794
+          }
+        },
+        {
+          "agent": "signal_probe",
+          "note": "probe failed \u2192 inconclusive, keeping the full budget",
+          "output": {
+            "cv_roc_auc": null,
+            "has_signal": null,
+            "budget": 3,
+            "error": "all probe fits failed"
+          }
+        },
+        {
+          "agent": "strategist",
+          "note": "logistic_regression \u2014 next family not tried yet",
+          "used_llm": false,
+          "output": {
+            "experiment_id": "trial-1",
+            "model_family": "logistic_regression",
+            "hyperparameters": {
+              "C": 1.0,
+              "max_iter": 500
+            },
+            "rationale": "next family not tried yet",
+            "drop_columns": [
+              "station_id",
+              "obs_date"
+            ]
+          }
+        },
+        {
+          "agent": "trainer",
+          "note": "attempt 1 FAILED: injected fault: LogisticRegression fit #4 crashed",
+          "status": "failed",
+          "attempt": 1
+        },
+        {
+          "agent": "trainer",
+          "note": "attempt 2: logistic_regression \u00b7 f1@0.5=0.119 \u00b7 auc=0.796",
+          "status": "succeeded",
+          "attempt": 2
+        },
+        {
+          "agent": "threshold_tuner",
+          "note": "threshold 0.50 \u2192 0.710 \u00b7 f1 0.119 \u2192 0.181"
+        },
+        {
+          "agent": "critic",
+          "note": "revise \u2014 val F1 0.181 < target 0.35 \u00b7 skill vs persistence -0.023",
+          "verdict": {
+            "action": "revise",
+            "reason": "val F1 0.181 < target 0.35",
+            "skill_over_persistence": -0.0229
+          }
+        },
+        {
+          "agent": "strategist",
+          "note": "random_forest \u2014 next family not tried yet",
+          "used_llm": false,
+          "output": {
+            "experiment_id": "trial-2",
+            "model_family": "random_forest",
+            "hyperparameters": {
+              "n_estimators": 200,
+              "max_depth": 8
+            },
+            "rationale": "next family not tried yet",
+            "drop_columns": [
+              "station_id",
+              "obs_date"
+            ]
+          }
+        },
+        {
+          "agent": "trainer",
+          "note": "attempt 1: random_forest \u00b7 f1@0.5=0.146 \u00b7 auc=0.805",
+          "status": "succeeded",
+          "attempt": 1
+        },
+        {
+          "agent": "threshold_tuner",
+          "note": "threshold 0.50 \u2192 0.624 \u00b7 f1 0.146 \u2192 0.222"
+        },
+        {
+          "agent": "critic",
+          "note": "revise \u2014 val F1 0.222 < target 0.35 \u00b7 skill vs persistence +0.019",
+          "verdict": {
+            "action": "revise",
+            "reason": "val F1 0.222 < target 0.35",
+            "skill_over_persistence": 0.0188
+          }
+        },
+        {
+          "agent": "strategist",
+          "note": "hist_gradient_boosting \u2014 next family not tried yet",
+          "used_llm": false,
+          "output": {
+            "experiment_id": "trial-3",
+            "model_family": "hist_gradient_boosting",
+            "hyperparameters": {
+              "learning_rate": 0.1,
+              "max_iter": 150
+            },
+            "rationale": "next family not tried yet",
+            "drop_columns": [
+              "station_id",
+              "obs_date"
+            ]
+          }
+        },
+        {
+          "agent": "trainer",
+          "note": "attempt 1: hist_gradient_boosting \u00b7 f1@0.5=0.059 \u00b7 auc=0.768",
+          "status": "succeeded",
+          "attempt": 1
+        },
+        {
+          "agent": "threshold_tuner",
+          "note": "threshold 0.50 \u2192 0.208 \u00b7 f1 0.059 \u2192 0.218"
+        },
+        {
+          "agent": "critic",
+          "note": "stop \u2014 budget_exhausted \u00b7 skill vs persistence +0.015",
+          "verdict": {
+            "action": "stop",
+            "reason": "budget_exhausted",
+            "skill_over_persistence": 0.0146
+          }
+        },
+        {
+          "agent": "evaluator",
+          "note": "holdout f1=0.251 \u00b7 auc=0.793",
+          "output": {
+            "f1": 0.25120772946859904,
+            "precision": 0.20155038759689922,
+            "recall": 0.3333333333333333,
+            "accuracy": 0.8950575490859851,
+            "roc_auc": 0.7933854997159142,
+            "pr_auc": 0.19190072262993557,
+            "threshold": 0.624341,
+            "confusion_matrix": {
+              "tn": 5184,
+              "fp": 412,
+              "fn": 208,
+              "tp": 104
+            },
+            "persistence_baseline": {
+              "f1": 0.2825040128410915,
+              "precision": 0.2829581993569132,
+              "recall": 0.28205128205128205
+            },
+            "holdout_period": "2025-01-25 \u2192 2025-08-23",
+            "n_holdout": 5908,
+            "positive_rate": 0.052809749492213946,
+            "majority_class_accuracy": 0.947190250507786,
+            "n_features": 39,
+            "model_family": "random_forest"
+          }
+        },
+        {
+          "agent": "reporter",
+          "note": "stop reason: budget_exhausted"
+        }
+      ],
+      "route_log": [
+        {
+          "after": "data_validator",
+          "next": "profiler",
+          "reason": "data is valid"
+        },
+        {
+          "after": "profiler",
+          "next": "leakage_auditor",
+          "reason": "always audit before modelling"
+        },
+        {
+          "after": "leakage_auditor",
+          "next": "benchmark",
+          "reason": "persistence benchmark planned"
+        },
+        {
+          "after": "benchmark",
+          "next": "signal_probe",
+          "reason": "probe planned"
+        },
+        {
+          "after": "signal_probe",
+          "next": "strategist",
+          "reason": "budget set to 3 trial(s)"
+        },
+        {
+          "after": "strategist",
+          "next": "trainer",
+          "reason": "train the proposed spec"
+        },
+        {
+          "after": "trainer",
+          "next": "trainer",
+          "reason": "fit failed \u2192 retry 1/2 with safe hyperparameters"
+        },
+        {
+          "after": "trainer",
+          "next": "threshold_tuner",
+          "reason": "val ROC-AUC 0.796 \u2192 tune the decision threshold"
+        },
+        {
+          "after": "threshold_tuner",
+          "next": "critic",
+          "reason": "tuned"
+        },
+        {
+          "after": "critic",
+          "next": "strategist",
+          "reason": "val F1 0.181 < target 0.35"
+        },
+        {
+          "after": "strategist",
+          "next": "trainer",
+          "reason": "train the proposed spec"
+        },
+        {
+          "after": "trainer",
+          "next": "threshold_tuner",
+          "reason": "val ROC-AUC 0.805 \u2192 tune the decision threshold"
+        },
+        {
+          "after": "threshold_tuner",
+          "next": "critic",
+          "reason": "tuned"
+        },
+        {
+          "after": "critic",
+          "next": "strategist",
+          "reason": "val F1 0.222 < target 0.35"
+        },
+        {
+          "after": "strategist",
+          "next": "trainer",
+          "reason": "train the proposed spec"
+        },
+        {
+          "after": "trainer",
+          "next": "threshold_tuner",
+          "reason": "val ROC-AUC 0.768 \u2192 tune the decision threshold"
+        },
+        {
+          "after": "threshold_tuner",
+          "next": "critic",
+          "reason": "tuned"
+        },
+        {
+          "after": "critic",
+          "next": "evaluator",
+          "reason": "stop: budget_exhausted"
+        },
+        {
+          "after": "evaluator",
+          "next": "reporter",
+          "reason": "write the report"
+        },
+        {
+          "after": "reporter",
+          "next": "END",
+          "reason": "done"
+        }
+      ],
+      "stop_reason": "budget_exhausted",
+      "holdout": {
+        "f1": 0.25120772946859904,
+        "precision": 0.20155038759689922,
+        "recall": 0.3333333333333333,
+        "accuracy": 0.8950575490859851,
+        "roc_auc": 0.7933854997159142,
+        "pr_auc": 0.19190072262993557,
+        "threshold": 0.624341,
+        "confusion_matrix": {
+          "tn": 5184,
+          "fp": 412,
+          "fn": 208,
+          "tp": 104
+        },
+        "persistence_baseline": {
+          "f1": 0.2825040128410915,
+          "precision": 0.2829581993569132,
+          "recall": 0.28205128205128205
+        },
+        "holdout_period": "2025-01-25 \u2192 2025-08-23",
+        "n_holdout": 5908,
+        "positive_rate": 0.052809749492213946,
+        "majority_class_accuracy": 0.947190250507786,
+        "n_features": 39,
+        "model_family": "random_forest"
+      },
+      "trials": [
+        {
+          "experiment_id": "trial-1",
+          "model_family": "logistic_regression",
+          "status": "succeeded",
+          "attempts": 2,
+          "f1": 0.18052256532066507,
+          "roc_auc": 0.7956861146364688,
+          "threshold": 0.710208,
+          "error": null
+        },
+        {
+          "experiment_id": "trial-2",
+          "model_family": "random_forest",
+          "status": "succeeded",
+          "attempts": 1,
+          "f1": 0.2222222222222222,
+          "roc_auc": 0.8050742101798245,
+          "threshold": 0.624341,
+          "error": null
+        },
+        {
+          "experiment_id": "trial-3",
+          "model_family": "hist_gradient_boosting",
+          "status": "succeeded",
+          "attempts": 1,
+          "f1": 0.21800947867298578,
+          "roc_auc": 0.7679064561343865,
+          "threshold": 0.207933,
+          "error": null
+        }
+      ],
+      "report": {
+        "stop_reason": "budget_exhausted",
+        "trials": 3,
+        "trial_budget_requested": 3,
+        "retries": 1,
+        "agents_planned": [
+          "data_validator",
+          "data_repairer",
+          "profiler",
+          "leakage_auditor",
+          "signal_probe",
+          "benchmark",
+          "strategist",
+          "trainer",
+          "threshold_tuner",
+          "critic",
+          "evaluator",
+          "reporter"
+        ],
+        "agents_run": [
+          "planner",
+          "data_validator",
+          "profiler",
+          "leakage_auditor",
+          "benchmark",
+          "signal_probe",
+          "strategist",
+          "trainer",
+          "threshold_tuner",
+          "critic",
+          "evaluator",
+          "reporter"
+        ],
+        "agents_planned_but_skipped": [
+          "data_repairer"
+        ],
+        "agent_steps": 21,
+        "leak_columns": [],
+        "data_validation": "ok",
+        "data_problems": null,
+        "repairs": [],
+        "persistence_benchmark": {
+          "available": true,
+          "rule": "predict low_vis_next_day = low_vis_today",
+          "f1": 0.2033898305084746,
+          "precision": 0.20869565217391303,
+          "recall": 0.19834710743801653,
+          "n_val": 5858,
+          "val_positive_rate": 0.020655513827244794
+        },
+        "best": {
+          "spec": {
+            "experiment_id": "trial-2",
+            "model_family": "random_forest",
+            "hyperparameters": {
+              "n_estimators": 200,
+              "max_depth": 8
+            },
+            "rationale": "next family not tried yet",
+            "drop_columns": [
+              "station_id",
+              "obs_date"
+            ]
+          },
+          "f1": 0.2222222222222222,
+          "roc_auc": 0.8050742101798245,
+          "threshold": 0.624341
+        },
+        "holdout": {
+          "f1": 0.25120772946859904,
+          "precision": 0.20155038759689922,
+          "recall": 0.3333333333333333,
+          "accuracy": 0.8950575490859851,
+          "roc_auc": 0.7933854997159142,
+          "pr_auc": 0.19190072262993557,
+          "threshold": 0.624341,
+          "confusion_matrix": {
+            "tn": 5184,
+            "fp": 412,
+            "fn": 208,
+            "tp": 104
+          },
+          "persistence_baseline": {
+            "f1": 0.2825040128410915,
+            "precision": 0.2829581993569132,
+            "recall": 0.28205128205128205
+          },
+          "holdout_period": "2025-01-25 \u2192 2025-08-23",
+          "n_holdout": 5908,
+          "positive_rate": 0.052809749492213946,
+          "majority_class_accuracy": 0.947190250507786,
+          "n_features": 39,
+          "model_family": "random_forest"
+        }
+      }
+    }
+  }
+}

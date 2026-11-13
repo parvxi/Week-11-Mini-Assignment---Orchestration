@@ -1,0 +1,24 @@
+{
+  "name": "saudi-dust-forecast-lab",
+  "image": "mcr.microsoft.com/devcontainers/python:3.12",
+  "features": {
+    // Gives the container the docker CLI, talking to the host Docker engine.
+    // The Airflow and agent stack itself is started from a terminal on the host (`make airflow`, `make start-mac`):
+    // it then serves on the host's localhost, so no ports are forwarded from this container.
+    "ghcr.io/devcontainers/features/docker-outside-of-docker:1": {
+      "moby": false
+    },
+    "ghcr.io/devcontainers/features/node:1": {
+      "version": "20"
+    }
+  },
+  "postCreateCommand": "pip install -e '.[dev]' -r services/gateway/requirements.txt && npm --prefix frontend install",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-python.python",
+        "ms-azuretools.vscode-docker"
+      ]
+    }
+  }
+}
