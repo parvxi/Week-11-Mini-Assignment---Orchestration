@@ -16,7 +16,7 @@ One of my biggest takeaways was that **a more sophisticated system isn't automat
 | **2. Agent-based ML loop** | Adapts the class LangGraph workflow to train models, check for leakage, tune thresholds, and evaluate forecasts | [`student_loop/`](student_loop/) |
 | **3. Adaptive multi-agent system (bonus)** | Lets a planner choose agents and a supervisor route the workflow based on data quality, model results, and failures | [`adaptive_loop/`](adaptive_loop/) · [`evals/`](evals/) |
 
-The problem, datasets, Airflow DAG, and forecasting pipeline are specific to this project. I reused and extended the gateway services, UI shell, `loop_runtime.py`, and `mini_loop/` from the [course AutoML research lab template](https://github.com/Kedar-V/automl-research-lab). My [project selection notes](docs/PROJECT_SELECTION.md) and [assignment compliance checklist](docs/COMPLIANCE.md) provide more context.
+The problem, datasets, Airflow DAG, and forecasting pipeline are specific to this project. I reused and extended the gateway services, UI shell, `loop_runtime.py`, and `mini_loop/` from the [course AutoML research lab template](https://github.com/Kedar-V/automl-research-lab).
 
 ## The data
 
@@ -267,5 +267,3 @@ Developed for **IDS 706 — Data Engineering Systems, Duke University**.
 Built with AI assistance (Claude Code): I chose the problem and datasets, directed the work and reviewed the results.
 
 Built on parts of the course's [AutoML Research Lab](https://github.com/Kedar-V/automl-research-lab) starter project. The original dataset selection, Saudi forecasting problem, data pipeline, agent adaptations, adaptive workflow, tests, and analysis are documented in this repository.
-
-For more technical details, see the [project selection notes](docs/PROJECT_SELECTION.md), [compliance checklist](docs/COMPLIANCE.md), and [evaluation results](evals/results/results.md).
